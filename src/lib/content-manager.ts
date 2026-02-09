@@ -330,6 +330,8 @@ export async function initializeAuth(): Promise<void> {
     await setStorageItem(STORAGE_KEYS.USER_EMAIL, 'admin');
     await setStorageItem(STORAGE_KEYS.USER_PASSWORD, hashedPw);
     await setStorageItem('auth_version', AUTH_VERSION);
+    // Eski oturumu kapat
+    localStorage.removeItem(STORAGE_KEYS.IS_AUTHENTICATED);
   }
 }
 
