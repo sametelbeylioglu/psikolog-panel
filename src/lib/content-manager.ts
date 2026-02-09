@@ -157,15 +157,26 @@ async function getStorageItem<T>(key: string, defaultValue: T): Promise<T> {
 
       if (data && !error) return data.value as T;
 
+      // Supabase'de bulunamadı - localStorage'ı kontrol et
+      try {
+        const item = localStorage.getItem(key);
+        if (item) return JSON.parse(item) as T;
+      } catch { /* localStorage da boş */ }
+
       // İlk kez: varsayılan değeri veritabanına kaydet
       await supabase.from('site_data').upsert({ key, value: defaultValue as unknown });
       return defaultValue;
     } catch {
+      // Supabase hatası - localStorage'a düş
+      try {
+        const item = localStorage.getItem(key);
+        if (item) return JSON.parse(item) as T;
+      } catch { /* localStorage da başarısız */ }
       return defaultValue;
     }
   }
 
-  // Fallback: localStorage
+  // Supabase yapılandırılmamış - localStorage kullan
   try {
     const item = localStorage.getItem(key);
     return item ? JSON.parse(item) : defaultValue;
