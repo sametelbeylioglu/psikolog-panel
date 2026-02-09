@@ -319,15 +319,16 @@ async function hashPassword(password: string): Promise<string> {
 }
 
 // ============ AUTH ============
+// Varsayılan şifre hash'i (pre-computed, kaynak kodda açık şifre yok)
+const DEFAULT_PW_HASH = '718bea54d0d80474708fb1b01c10010ea639a4fcec8103f2e600b40ae9e62476';
+
 export async function initializeAuth(): Promise<void> {
   if (typeof window === 'undefined') return;
   const version = await getStorageItem('auth_version', '');
-  if (version !== 'v5') {
-    // Temiz kurulum: hash'li sifre olustur
-    const hashedPw = await hashPassword('admin123');
+  if (version !== 'v6') {
     await setStorageItem(STORAGE_KEYS.USER_EMAIL, 'admin');
-    await setStorageItem(STORAGE_KEYS.USER_PASSWORD, hashedPw);
-    await setStorageItem('auth_version', 'v5');
+    await setStorageItem(STORAGE_KEYS.USER_PASSWORD, DEFAULT_PW_HASH);
+    await setStorageItem('auth_version', 'v6');
     localStorage.removeItem(STORAGE_KEYS.IS_AUTHENTICATED);
   }
 }
