@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -28,8 +28,10 @@ export default function Sidebar() {
   const pathname = usePathname();
   const [websiteOpen, setWebsiteOpen] = useState(pathname.startsWith("/admin/website"));
   const [mobileOpen, setMobileOpen] = useState(false);
-  const logo = typeof window !== "undefined" ? getLogo() : "PsikoPanel";
+  const [logo, setLogo] = useState("PsikoPanel");
   const isActive = (href: string) => href === "/admin" ? pathname === "/admin" : pathname.startsWith(href);
+
+  useEffect(() => { getLogo().then(setLogo); }, []);
 
   const content = (
     <div className="flex flex-col h-full">
@@ -57,7 +59,7 @@ export default function Sidebar() {
           })}
         </ul>
       </nav>
-      <div className="px-6 py-4 border-t"><p className="text-xs text-muted-foreground">Psikolog Panel v1.0</p></div>
+      <div className="px-6 py-4 border-t"><p className="text-xs text-muted-foreground">Psikolog Panel v2.0</p></div>
     </div>
   );
 

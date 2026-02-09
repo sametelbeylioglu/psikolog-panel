@@ -11,12 +11,14 @@ import { getNotifications, logout } from "@/lib/content-manager";
 export default function Header() {
   const router = useRouter();
   const [unreadCount, setUnreadCount] = useState(0);
+
   useEffect(() => {
-    const update = () => setUnreadCount(getNotifications().filter(n => !n.read).length);
+    const update = async () => setUnreadCount((await getNotifications()).filter(n => !n.read).length);
     update();
     const interval = setInterval(update, 5000);
     return () => clearInterval(interval);
   }, []);
+
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b bg-card px-6 lg:px-8">
       <div className="lg:hidden w-10" /><div className="flex-1" />

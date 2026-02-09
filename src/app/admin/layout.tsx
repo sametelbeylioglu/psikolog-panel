@@ -10,11 +10,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [checked, setChecked] = useState(false);
 
   useEffect(() => {
-    if (!isAuthenticated()) {
-      router.push("/login");
-    } else {
-      setChecked(true);
-    }
+    const check = async () => {
+      if (!(await isAuthenticated())) {
+        router.push("/login");
+      } else {
+        setChecked(true);
+      }
+    };
+    check();
   }, [router]);
 
   if (!checked) return (

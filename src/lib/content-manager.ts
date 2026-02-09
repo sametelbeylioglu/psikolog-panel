@@ -1,7 +1,11 @@
 // =============================================
 // Psikolog Panel - Content Manager
-// Tüm veri yönetimi localStorage üzerinden
+// Supabase (merkezi) + localStorage (fallback)
 // =============================================
+
+import { getSupabase, isSupabaseConfigured } from './supabase';
+
+// ============ INTERFACES ============
 
 export interface HeroContent {
   title: string;
@@ -116,6 +120,8 @@ export interface ContactInfo {
   };
 }
 
+// ============ STORAGE KEYS ============
+
 const STORAGE_KEYS = {
   HOMEPAGE: 'homepage_content',
   ABOUT: 'about_content',
@@ -135,8 +141,31 @@ const STORAGE_KEYS = {
   TWO_FACTOR_CODE: 'twoFactorCode',
 };
 
-function getStorageItem<T>(key: string, defaultValue: T): T {
+// ============ CORE STORAGE (Supabase + fallback) ============
+
+async function getStorageItem<T>(key: string, defaultValue: T): Promise<T> {
   if (typeof window === 'undefined') return defaultValue;
+
+  const supabase = getSupabase();
+  if (supabase) {
+    try {
+      const { data, error } = await supabase
+        .from('site_data')
+        .select('value')
+        .eq('key', key)
+        .single();
+
+      if (data && !error) return data.value as T;
+
+      // İlk kez: varsayılan değeri veritabanına kaydet
+      await supabase.from('site_data').upsert({ key, value: defaultValue as unknown });
+      return defaultValue;
+    } catch {
+      return defaultValue;
+    }
+  }
+
+  // Fallback: localStorage
   try {
     const item = localStorage.getItem(key);
     return item ? JSON.parse(item) : defaultValue;
@@ -145,12 +174,23 @@ function getStorageItem<T>(key: string, defaultValue: T): T {
   }
 }
 
-function setStorageItem<T>(key: string, value: T): void {
+async function setStorageItem<T>(key: string, value: T): Promise<void> {
   if (typeof window === 'undefined') return;
+
+  const supabase = getSupabase();
+  if (supabase) {
+    try {
+      await supabase.from('site_data').upsert({ key, value: value as unknown });
+    } catch (error) {
+      console.error(`Error writing ${key} to Supabase:`, error);
+    }
+  }
+
+  // Her zaman localStorage'a da yaz (local cache)
   try {
     localStorage.setItem(key, JSON.stringify(value));
   } catch (error) {
-    console.error(`Error writing ${key}:`, error);
+    console.error(`Error writing ${key} to localStorage:`, error);
   }
 }
 
@@ -198,30 +238,17 @@ const defaultPackages: TherapyPackage[] = [
   { id: '3', name: 'Yoğun Terapi Paketi', description: 'Kapsamlı terapi süreci.', price: 9500, duration: '50 dakika', sessions: 16, features: ['Kapsamlı psikolojik test bataryası', 'Kişiye özel terapi planı', '16 bireysel seans', '7/24 WhatsApp desteği', 'Ev ödevleri ve çalışma materyalleri', 'Aylık ilerleme raporları', 'Gerektiğinde aile görüşmesi', '3 ay takip seansı'] },
 ];
 
-const defaultAppointments: Appointment[] = [
-  { id: '1', clientName: 'Ahmet Yılmaz', clientEmail: 'ahmet@example.com', clientPhone: '0532 111 22 33', packageId: '2', packageName: 'Standart Terapi Paketi', date: '2026-02-10', time: '10:00', status: 'confirmed', notes: 'İlk seans', createdAt: '2026-02-01T10:00:00' },
-  { id: '2', clientName: 'Elif Kaya', clientEmail: 'elif@example.com', clientPhone: '0533 222 33 44', packageId: '3', packageName: 'Yoğun Terapi Paketi', date: '2026-02-10', time: '14:00', status: 'pending', createdAt: '2026-02-02T14:00:00' },
-  { id: '3', clientName: 'Mehmet Demir', clientEmail: 'mehmet@example.com', clientPhone: '0535 333 44 55', packageId: '1', packageName: 'Başlangıç Paketi', date: '2026-02-11', time: '11:00', status: 'confirmed', createdAt: '2026-02-03T11:00:00' },
-  { id: '4', clientName: 'Zeynep Arslan', clientEmail: 'zeynep@example.com', clientPhone: '0536 444 55 66', packageId: '2', packageName: 'Standart Terapi Paketi', date: '2026-02-08', time: '16:00', status: 'completed', createdAt: '2026-01-25T16:00:00' },
-];
+const defaultAppointments: Appointment[] = [];
 
 const defaultNotifications: Notification[] = [
-  { id: '1', type: 'appointment', title: 'Yeni Randevu Talebi', message: 'Elif Kaya yeni bir randevu talebi oluşturdu.', read: false, createdAt: new Date(Date.now() - 2 * 3600000).toISOString() },
-  { id: '2', type: 'payment', title: 'Ödeme Alındı', message: 'Ahmet Yılmaz - Standart Terapi Paketi ödemesi alındı.', read: false, createdAt: new Date(Date.now() - 5 * 3600000).toISOString() },
-  { id: '3', type: 'general', title: 'Hoş Geldiniz', message: "Psikolog Panel'e hoş geldiniz!", read: true, createdAt: new Date(Date.now() - 86400000).toISOString() },
+  { id: '1', type: 'general', title: 'Hoş Geldiniz', message: "Psikolog Panel'e hoş geldiniz!", read: true, createdAt: new Date(Date.now() - 86400000).toISOString() },
 ];
 
-const defaultClients: Client[] = [
-  { id: '1', name: 'Ahmet Yılmaz', email: 'ahmet@example.com', phone: '0532 111 22 33', firstVisit: '2025-06-15', lastVisit: '2026-02-08', totalSessions: 12, status: 'active', notes: 'Kaygı bozukluğu - BDT' },
-  { id: '2', name: 'Elif Kaya', email: 'elif@example.com', phone: '0533 222 33 44', firstVisit: '2025-09-01', lastVisit: '2026-02-05', totalSessions: 8, status: 'active', notes: 'Depresyon' },
-  { id: '3', name: 'Mehmet Demir', email: 'mehmet@example.com', phone: '0535 333 44 55', firstVisit: '2026-01-10', lastVisit: '2026-02-03', totalSessions: 3, status: 'active' },
-  { id: '4', name: 'Zeynep Arslan', email: 'zeynep@example.com', phone: '0536 444 55 66', firstVisit: '2025-03-20', lastVisit: '2026-01-15', totalSessions: 20, status: 'active', notes: 'Çift terapisi' },
-  { id: '5', name: 'Can Özkan', email: 'can@example.com', phone: '0537 555 66 77', firstVisit: '2025-11-01', lastVisit: '2026-01-05', totalSessions: 5, status: 'inactive', notes: 'Tamamlandı' },
-];
+const defaultClients: Client[] = [];
 
 const defaultBlogPosts: BlogPost[] = [
-  { id: '1', title: 'Kaygı Bozukluğu ile Başa Çıkma Yolları', content: 'Kaygı bozukluğu, günümüzde en sık karşılaşılan ruhsal sorunlardan biridir...', excerpt: 'Kaygı bozukluğu ile başa çıkmanın etkili yollarını keşfedin.', author: 'Psk. Uzman', createdAt: '2026-01-15T10:00:00', published: true },
-  { id: '2', title: 'Sağlıklı İlişkilerin Temelleri', content: 'Sağlıklı ilişkiler, mutlu bir yaşamın temel yapı taşlarından biridir...', excerpt: 'Sağlıklı ve mutlu ilişkilerin temellerini öğrenin.', author: 'Psk. Uzman', createdAt: '2026-01-28T14:00:00', published: true },
+  { id: '1', title: 'Kaygı Bozukluğu ile Başa Çıkma Yolları', content: 'Kaygı bozukluğu, günümüzde en sık karşılaşılan ruhsal sorunlardan biridir. Modern yaşamın getirdiği stres, belirsizlik ve hızlı değişimler, kaygı düzeyimizi artırabilir.\n\nKaygıyla başa çıkmak için bazı etkili yöntemler:\n\n1. Derin Nefes Egzersizleri: Günde en az 3 kez, 5 dakika boyunca derin nefes alıp verin.\n\n2. Mindfulness (Farkındalık): Anı yaşamaya odaklanın. Geçmiş veya gelecek hakkında düşünmek yerine şu ana konsantre olun.\n\n3. Düzenli Egzersiz: Haftada en az 3 gün, 30 dakika yürüyüş veya spor yapın.\n\n4. Uyku Düzeni: Her gün aynı saatte yatıp kalkın, 7-8 saat uyuyun.\n\n5. Profesyonel Destek: Kaygınız günlük yaşamınızı etkiliyorsa bir uzmana başvurun.', excerpt: 'Kaygı bozukluğu ile başa çıkmanın etkili yollarını keşfedin.', author: 'Psk. Uzman', createdAt: '2026-01-15T10:00:00', published: true },
+  { id: '2', title: 'Sağlıklı İlişkilerin Temelleri', content: 'Sağlıklı ilişkiler, mutlu bir yaşamın temel yapı taşlarından biridir. İster romantik, ister aile veya arkadaşlık ilişkisi olsun, sağlıklı bir ilişkinin temel bileşenleri benzerdir.\n\nSağlıklı ilişkilerin temel özellikleri:\n\n1. Açık İletişim: Duygularınızı ve düşüncelerinizi karşı tarafa açıkça ifade edin.\n\n2. Karşılıklı Saygı: Farklılıklara saygı gösterin ve sınırları kabul edin.\n\n3. Güven: Güven inşa etmek zaman alır ama ilişkinin temelidir.\n\n4. Empati: Karşı tarafın perspektifinden bakmaya çalışın.\n\n5. Birlikte Büyüme: İlişkide her iki tarafın da gelişimine alan tanıyın.', excerpt: 'Sağlıklı ve mutlu ilişkilerin temellerini öğrenin.', author: 'Psk. Uzman', createdAt: '2026-01-28T14:00:00', published: true },
 ];
 
 const defaultContactInfo: ContactInfo = {
@@ -233,85 +260,145 @@ const defaultContactInfo: ContactInfo = {
 };
 
 // ============ HERO ============
-export function getHeroContent(): HeroContent { return getStorageItem(STORAGE_KEYS.HOMEPAGE, defaultHeroContent); }
-export function saveHeroContent(content: HeroContent): void { setStorageItem(STORAGE_KEYS.HOMEPAGE, content); }
+export async function getHeroContent(): Promise<HeroContent> { return getStorageItem(STORAGE_KEYS.HOMEPAGE, defaultHeroContent); }
+export async function saveHeroContent(content: HeroContent): Promise<void> { await setStorageItem(STORAGE_KEYS.HOMEPAGE, content); }
 
 // ============ FEATURES ============
-export function getFeatures(): Feature[] { return getStorageItem(STORAGE_KEYS.FEATURES, defaultFeatures); }
-export function saveFeatures(features: Feature[]): void { setStorageItem(STORAGE_KEYS.FEATURES, features); }
+export async function getFeatures(): Promise<Feature[]> { return getStorageItem(STORAGE_KEYS.FEATURES, defaultFeatures); }
+export async function saveFeatures(features: Feature[]): Promise<void> { await setStorageItem(STORAGE_KEYS.FEATURES, features); }
 
 // ============ STATS ============
-export function getStats(): Stat[] { return getStorageItem(STORAGE_KEYS.STATS, defaultStats); }
-export function saveStats(stats: Stat[]): void { setStorageItem(STORAGE_KEYS.STATS, stats); }
+export async function getStats(): Promise<Stat[]> { return getStorageItem(STORAGE_KEYS.STATS, defaultStats); }
+export async function saveStats(stats: Stat[]): Promise<void> { await setStorageItem(STORAGE_KEYS.STATS, stats); }
 
 // ============ ABOUT ============
-export function getAboutContent(): AboutContent { return getStorageItem(STORAGE_KEYS.ABOUT, defaultAboutContent); }
-export function saveAboutContent(content: AboutContent): void { setStorageItem(STORAGE_KEYS.ABOUT, content); }
+export async function getAboutContent(): Promise<AboutContent> { return getStorageItem(STORAGE_KEYS.ABOUT, defaultAboutContent); }
+export async function saveAboutContent(content: AboutContent): Promise<void> { await setStorageItem(STORAGE_KEYS.ABOUT, content); }
 
 // ============ PACKAGES ============
-export function getPackages(): TherapyPackage[] { return getStorageItem(STORAGE_KEYS.THERAPY_PACKAGES, defaultPackages); }
-export function savePackages(packages: TherapyPackage[]): void { setStorageItem(STORAGE_KEYS.THERAPY_PACKAGES, packages); }
-export function getPackagesAsServices(): Service[] { return getPackages().map(p => ({ ...p })); }
+export async function getPackages(): Promise<TherapyPackage[]> { return getStorageItem(STORAGE_KEYS.THERAPY_PACKAGES, defaultPackages); }
+export async function savePackages(packages: TherapyPackage[]): Promise<void> { await setStorageItem(STORAGE_KEYS.THERAPY_PACKAGES, packages); }
+export async function getPackagesAsServices(): Promise<Service[]> { return (await getPackages()).map(p => ({ ...p })); }
 
 // ============ APPOINTMENTS ============
-export function getAppointments(): Appointment[] { return getStorageItem(STORAGE_KEYS.APPOINTMENTS, defaultAppointments); }
-export function saveAppointments(appointments: Appointment[]): void { setStorageItem(STORAGE_KEYS.APPOINTMENTS, appointments); }
-export function saveAppointment(apt: Appointment): void { const all = getAppointments(); all.push(apt); saveAppointments(all); }
-export function updateAppointment(id: string, updates: Partial<Appointment>): void { const all = getAppointments(); const i = all.findIndex(a => a.id === id); if (i !== -1) { all[i] = { ...all[i], ...updates }; saveAppointments(all); } }
+export async function getAppointments(): Promise<Appointment[]> { return getStorageItem(STORAGE_KEYS.APPOINTMENTS, defaultAppointments); }
+export async function saveAppointments(appointments: Appointment[]): Promise<void> { await setStorageItem(STORAGE_KEYS.APPOINTMENTS, appointments); }
+export async function saveAppointment(apt: Appointment): Promise<void> { const all = await getAppointments(); all.push(apt); await saveAppointments(all); }
+export async function updateAppointment(id: string, updates: Partial<Appointment>): Promise<void> { const all = await getAppointments(); const i = all.findIndex(a => a.id === id); if (i !== -1) { all[i] = { ...all[i], ...updates }; await saveAppointments(all); } }
 
 // ============ CLIENTS ============
-export function getClients(): Client[] { return getStorageItem(STORAGE_KEYS.CLIENTS, defaultClients); }
-export function saveClients(clients: Client[]): void { setStorageItem(STORAGE_KEYS.CLIENTS, clients); }
+export async function getClients(): Promise<Client[]> { return getStorageItem(STORAGE_KEYS.CLIENTS, defaultClients); }
+export async function saveClients(clients: Client[]): Promise<void> { await setStorageItem(STORAGE_KEYS.CLIENTS, clients); }
 
 // ============ NOTIFICATIONS ============
-export function getNotifications(): Notification[] { return getStorageItem(STORAGE_KEYS.NOTIFICATIONS, defaultNotifications); }
-export function saveNotifications(notifications: Notification[]): void { setStorageItem(STORAGE_KEYS.NOTIFICATIONS, notifications); }
-export function addNotification(n: Notification): void { const all = getNotifications(); all.unshift(n); saveNotifications(all); }
-export function markNotificationAsRead(id: string): void { const all = getNotifications(); const i = all.findIndex(n => n.id === id); if (i !== -1) { all[i].read = true; saveNotifications(all); } }
-export function deleteNotification(id: string): void { saveNotifications(getNotifications().filter(n => n.id !== id)); }
+export async function getNotifications(): Promise<Notification[]> { return getStorageItem(STORAGE_KEYS.NOTIFICATIONS, defaultNotifications); }
+export async function saveNotifications(notifications: Notification[]): Promise<void> { await setStorageItem(STORAGE_KEYS.NOTIFICATIONS, notifications); }
+export async function addNotification(n: Notification): Promise<void> { const all = await getNotifications(); all.unshift(n); await saveNotifications(all); }
+export async function markNotificationAsRead(id: string): Promise<void> { const all = await getNotifications(); const i = all.findIndex(n => n.id === id); if (i !== -1) { all[i].read = true; await saveNotifications(all); } }
+export async function deleteNotification(id: string): Promise<void> { const all = await getNotifications(); await saveNotifications(all.filter(n => n.id !== id)); }
 
 // ============ BLOG ============
-export function getBlogPosts(): BlogPost[] { return getStorageItem(STORAGE_KEYS.BLOG_POSTS, defaultBlogPosts); }
-export function saveBlogPosts(posts: BlogPost[]): void { setStorageItem(STORAGE_KEYS.BLOG_POSTS, posts); }
+export async function getBlogPosts(): Promise<BlogPost[]> { return getStorageItem(STORAGE_KEYS.BLOG_POSTS, defaultBlogPosts); }
+export async function saveBlogPosts(posts: BlogPost[]): Promise<void> { await setStorageItem(STORAGE_KEYS.BLOG_POSTS, posts); }
 
 // ============ CONTACT ============
-export function getContactInfo(): ContactInfo { return getStorageItem(STORAGE_KEYS.CONTACT_INFO, defaultContactInfo); }
-export function saveContactInfo(info: ContactInfo): void { setStorageItem(STORAGE_KEYS.CONTACT_INFO, info); }
+export async function getContactInfo(): Promise<ContactInfo> { return getStorageItem(STORAGE_KEYS.CONTACT_INFO, defaultContactInfo); }
+export async function saveContactInfo(info: ContactInfo): Promise<void> { await setStorageItem(STORAGE_KEYS.CONTACT_INFO, info); }
 
 // ============ LOGO ============
-export function getLogo(): string { return getStorageItem(STORAGE_KEYS.LOGO, 'PsikoPanel'); }
-export function saveLogo(logo: string): void { setStorageItem(STORAGE_KEYS.LOGO, logo); }
+export async function getLogo(): Promise<string> { return getStorageItem(STORAGE_KEYS.LOGO, 'PsikoPanel'); }
+export async function saveLogo(logo: string): Promise<void> { await setStorageItem(STORAGE_KEYS.LOGO, logo); }
 
 // ============ AUTH ============
-export function initializeAuth(): void {
+export async function initializeAuth(): Promise<void> {
   if (typeof window === 'undefined') return;
-  if (!localStorage.getItem(STORAGE_KEYS.USER_EMAIL)) localStorage.setItem(STORAGE_KEYS.USER_EMAIL, 'admin@psikolog.com');
-  if (!localStorage.getItem(STORAGE_KEYS.USER_PASSWORD)) localStorage.setItem(STORAGE_KEYS.USER_PASSWORD, 'psikopaNe1!');
+  const email = await getStorageItem(STORAGE_KEYS.USER_EMAIL, '');
+  if (!email) {
+    await setStorageItem(STORAGE_KEYS.USER_EMAIL, 'admin@psikolog.com');
+    await setStorageItem(STORAGE_KEYS.USER_PASSWORD, 'psikopaNe1!');
+  }
 }
-export function isAuthenticated(): boolean { if (typeof window === 'undefined') return false; return localStorage.getItem(STORAGE_KEYS.IS_AUTHENTICATED) === 'true'; }
-export function login(email: string, password: string): boolean { initializeAuth(); if (email === localStorage.getItem(STORAGE_KEYS.USER_EMAIL) && password === localStorage.getItem(STORAGE_KEYS.USER_PASSWORD)) { localStorage.setItem(STORAGE_KEYS.IS_AUTHENTICATED, 'true'); return true; } return false; }
-export function logout(): void { if (typeof window !== 'undefined') localStorage.removeItem(STORAGE_KEYS.IS_AUTHENTICATED); }
-export function isTwoFactorEnabled(): boolean { if (typeof window === 'undefined') return false; return localStorage.getItem(STORAGE_KEYS.TWO_FACTOR_ENABLED) === 'true'; }
-export function getTwoFactorCode(): string | null { if (typeof window === 'undefined') return null; return localStorage.getItem(STORAGE_KEYS.TWO_FACTOR_CODE); }
-export function enableTwoFactor(): string { const code = Math.floor(100000 + Math.random() * 900000).toString(); localStorage.setItem(STORAGE_KEYS.TWO_FACTOR_ENABLED, 'true'); localStorage.setItem(STORAGE_KEYS.TWO_FACTOR_CODE, code); return code; }
-export function disableTwoFactor(): void { localStorage.removeItem(STORAGE_KEYS.TWO_FACTOR_ENABLED); localStorage.removeItem(STORAGE_KEYS.TWO_FACTOR_CODE); }
-export function verifyTwoFactor(code: string): boolean { return code === getTwoFactorCode(); }
-export function changePassword(old: string, newP: string): boolean { if (old === localStorage.getItem(STORAGE_KEYS.USER_PASSWORD)) { localStorage.setItem(STORAGE_KEYS.USER_PASSWORD, newP); return true; } return false; }
+
+export async function isAuthenticated(): Promise<boolean> {
+  if (typeof window === 'undefined') return false;
+  // Auth durumu her zaman localStorage'da (session bazlı)
+  return localStorage.getItem(STORAGE_KEYS.IS_AUTHENTICATED) === 'true';
+}
+
+export async function login(email: string, password: string): Promise<boolean> {
+  await initializeAuth();
+  const storedEmail = await getStorageItem(STORAGE_KEYS.USER_EMAIL, '');
+  const storedPassword = await getStorageItem(STORAGE_KEYS.USER_PASSWORD, '');
+  if (email === storedEmail && password === storedPassword) {
+    localStorage.setItem(STORAGE_KEYS.IS_AUTHENTICATED, 'true');
+    return true;
+  }
+  return false;
+}
+
+export function logout(): void {
+  if (typeof window !== 'undefined') localStorage.removeItem(STORAGE_KEYS.IS_AUTHENTICATED);
+}
+
+export async function isTwoFactorEnabled(): Promise<boolean> {
+  return await getStorageItem(STORAGE_KEYS.TWO_FACTOR_ENABLED, false);
+}
+
+export async function getTwoFactorCode(): Promise<string | null> {
+  return await getStorageItem(STORAGE_KEYS.TWO_FACTOR_CODE, null as string | null);
+}
+
+export async function enableTwoFactor(): Promise<string> {
+  const code = Math.floor(100000 + Math.random() * 900000).toString();
+  await setStorageItem(STORAGE_KEYS.TWO_FACTOR_ENABLED, true);
+  await setStorageItem(STORAGE_KEYS.TWO_FACTOR_CODE, code);
+  return code;
+}
+
+export async function disableTwoFactor(): Promise<void> {
+  await setStorageItem(STORAGE_KEYS.TWO_FACTOR_ENABLED, false);
+  await setStorageItem(STORAGE_KEYS.TWO_FACTOR_CODE, null);
+}
+
+export async function verifyTwoFactor(code: string): Promise<boolean> {
+  const stored = await getTwoFactorCode();
+  return code === stored;
+}
+
+export async function changePassword(oldP: string, newP: string): Promise<boolean> {
+  const stored = await getStorageItem(STORAGE_KEYS.USER_PASSWORD, '');
+  if (oldP === stored) {
+    await setStorageItem(STORAGE_KEYS.USER_PASSWORD, newP);
+    return true;
+  }
+  return false;
+}
 
 // ============ UTILITY ============
 export function formatTimeAgo(dateString: string): string {
-  const date = new Date(dateString); const now = new Date();
+  const date = new Date(dateString);
+  const now = new Date();
   const m = Math.floor((now.getTime() - date.getTime()) / 60000);
-  const h = Math.floor(m / 60); const d = Math.floor(h / 24);
-  if (m < 1) return "Az önce"; if (m < 60) return `${m} dakika önce`;
-  if (h < 24) return `${h} saat önce`; if (d < 7) return `${d} gün önce`;
+  const h = Math.floor(m / 60);
+  const d = Math.floor(h / 24);
+  if (m < 1) return "Az önce";
+  if (m < 60) return `${m} dakika önce`;
+  if (h < 24) return `${h} saat önce`;
+  if (d < 7) return `${d} gün önce`;
   return date.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
 }
-export function generateId(): string { return Date.now().toString(36) + Math.random().toString(36).substring(2); }
+
+export function generateId(): string {
+  return Date.now().toString(36) + Math.random().toString(36).substring(2);
+}
+
 export function downloadCSV(data: Record<string, string>[], filename: string): void {
   if (!data.length) return;
   const headers = Object.keys(data[0]);
   const csv = [headers.join(','), ...data.map(row => headers.map(h => `"${row[h] || ''}"`).join(','))].join('\n');
   const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
-  const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = filename; link.click();
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = filename;
+  link.click();
 }

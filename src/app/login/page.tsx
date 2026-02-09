@@ -11,20 +11,48 @@ import { login, initializeAuth, isTwoFactorEnabled, verifyTwoFactor, isAuthentic
 
 export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState(""); const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [twoFactorCode, setTwoFactorCode] = useState(""); const [showTwoFactor, setShowTwoFactor] = useState(false);
-  const [error, setError] = useState(""); const [loading, setLoading] = useState(false);
+  const [twoFactorCode, setTwoFactorCode] = useState("");
+  const [showTwoFactor, setShowTwoFactor] = useState(false);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  useEffect(() => { initializeAuth(); if (isAuthenticated()) router.push("/admin"); }, [router]);
+  useEffect(() => {
+    const check = async () => {
+      await initializeAuth();
+      if (await isAuthenticated()) router.push("/admin");
+    };
+    check();
+  }, [router]);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault(); setError(""); setLoading(true);
-    if (showTwoFactor) { if (verifyTwoFactor(twoFactorCode)) { login(email, password); router.push("/admin"); } else { setError("Geçersiz 2FA kodu."); setLoading(false); } return; }
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+
+    if (showTwoFactor) {
+      if (await verifyTwoFactor(twoFactorCode)) {
+        await login(email, password);
+        router.push("/admin");
+      } else {
+        setError("Geçersiz 2FA kodu.");
+        setLoading(false);
+      }
+      return;
+    }
+
     if (!email || !password) { setError("Lütfen tüm alanları doldurun."); setLoading(false); return; }
-    const success = login(email, password);
-    if (success) { if (isTwoFactorEnabled()) { setShowTwoFactor(true); setLoading(false); return; } router.push("/admin"); }
-    else { setError("Geçersiz email veya şifre."); setLoading(false); }
+
+    const success = await login(email, password);
+    if (success) {
+      if (await isTwoFactorEnabled()) { setShowTwoFactor(true); setLoading(false); return; }
+      router.push("/admin");
+    } else {
+      setError("Geçersiz email veya şifre.");
+      setLoading(false);
+    }
   };
 
   return (

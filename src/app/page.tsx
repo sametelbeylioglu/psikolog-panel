@@ -19,12 +19,19 @@ export default function HomePage() {
   const [logo, setLogo] = useState("PsikoPanel");
 
   useEffect(() => {
-    setHero(getHeroContent()); setFeatures(getFeatures()); setStats(getStats());
-    setAbout(getAboutContent()); setServices(getPackagesAsServices());
-    setContact(getContactInfo()); setLogo(getLogo());
+    const load = async () => {
+      setHero(await getHeroContent());
+      setFeatures(await getFeatures());
+      setStats(await getStats());
+      setAbout(await getAboutContent());
+      setServices(await getPackagesAsServices());
+      setContact(await getContactInfo());
+      setLogo(await getLogo());
+    };
+    load();
   }, []);
 
-  if (!hero) return null;
+  if (!hero) return <div className="min-h-screen flex items-center justify-center"><div className="animate-pulse text-muted-foreground">Yükleniyor...</div></div>;
 
   return (
     <div className="min-h-screen bg-background">
