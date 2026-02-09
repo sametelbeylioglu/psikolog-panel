@@ -106,8 +106,8 @@ export default function LoginPage() {
             {!showTwoFactor ? (
               <>
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input id="email" type="email" placeholder="admin@psikolog.com" value={email} onChange={e => setEmail(e.target.value)} autoComplete="email" />
+                  <Label htmlFor="email">Kullanıcı Adı</Label>
+                  <Input id="email" type="text" placeholder="Kullanıcı adınızı girin" value={email} onChange={e => setEmail(e.target.value)} autoComplete="username" />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="password">Şifre</Label>
