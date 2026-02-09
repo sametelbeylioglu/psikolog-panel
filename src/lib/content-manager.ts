@@ -319,19 +319,27 @@ async function hashPassword(password: string): Promise<string> {
 }
 
 // ============ AUTH ============
-const AUTH_VERSION = 'v3_hashed';
+const AUTH_VERSION = 'v4_env';
 
 export async function initializeAuth(): Promise<void> {
   if (typeof window === 'undefined') return;
   const version = await getStorageItem('auth_version', '');
   if (version !== AUTH_VERSION) {
     // Eski format veya ilk kurulum - yeni hash'li hesap oluştur
-    const hashedPw = await hashPassword('admin123');
-    await setStorageItem(STORAGE_KEYS.USER_EMAIL, 'admin');
+    // İlk şifre: ortam değişkeninden veya rastgele üretilir
+    const defaultUser = process.env.NEXT_PUBLIC_ADMIN_USER || 'admin';
+    const defaultPass = process.env.NEXT_PUBLIC_ADMIN_PASS || crypto.randomUUID().slice(0, 12);
+    const hashedPw = await hashPassword(defaultPass);
+    await setStorageItem(STORAGE_KEYS.USER_EMAIL, defaultUser);
     await setStorageItem(STORAGE_KEYS.USER_PASSWORD, hashedPw);
     await setStorageItem('auth_version', AUTH_VERSION);
     // Eski oturumu kapat
     localStorage.removeItem(STORAGE_KEYS.IS_AUTHENTICATED);
+    // İlk kurulumda şifreyi konsola yaz (sadece bir kez)
+    if (typeof window !== 'undefined') {
+      console.log(`[PsikoPanel] İlk kurulum - Kullanıcı: ${defaultUser} / Şifre: ${defaultPass}`);
+      console.log('[PsikoPanel] Lütfen giriş yaptıktan sonra şifrenizi değiştirin!');
+    }
   }
 }
 
