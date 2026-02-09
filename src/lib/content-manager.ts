@@ -309,27 +309,38 @@ export async function saveContactInfo(info: ContactInfo): Promise<void> { await 
 export async function getLogo(): Promise<string> { return getStorageItem(STORAGE_KEYS.LOGO, 'PsikoPanel'); }
 export async function saveLogo(logo: string): Promise<void> { await setStorageItem(STORAGE_KEYS.LOGO, logo); }
 
+// ============ PASSWORD HASHING (SHA-256) ============
+async function hashPassword(password: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(password + '_psikopanel_salt_2026');
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
 // ============ AUTH ============
 export async function initializeAuth(): Promise<void> {
   if (typeof window === 'undefined') return;
   const email = await getStorageItem(STORAGE_KEYS.USER_EMAIL, '');
   if (!email) {
-    await setStorageItem(STORAGE_KEYS.USER_EMAIL, 'admin@psikolog.com');
-    await setStorageItem(STORAGE_KEYS.USER_PASSWORD, 'psikopaNe1!');
+    // Varsayılan hesap oluştur (şifre hash'li saklanır)
+    const hashedPw = await hashPassword('admin123');
+    await setStorageItem(STORAGE_KEYS.USER_EMAIL, 'admin');
+    await setStorageItem(STORAGE_KEYS.USER_PASSWORD, hashedPw);
   }
 }
 
 export async function isAuthenticated(): Promise<boolean> {
   if (typeof window === 'undefined') return false;
-  // Auth durumu her zaman localStorage'da (session bazlı)
   return localStorage.getItem(STORAGE_KEYS.IS_AUTHENTICATED) === 'true';
 }
 
-export async function login(email: string, password: string): Promise<boolean> {
+export async function login(username: string, password: string): Promise<boolean> {
   await initializeAuth();
-  const storedEmail = await getStorageItem(STORAGE_KEYS.USER_EMAIL, '');
-  const storedPassword = await getStorageItem(STORAGE_KEYS.USER_PASSWORD, '');
-  if (email === storedEmail && password === storedPassword) {
+  const storedUsername = await getStorageItem(STORAGE_KEYS.USER_EMAIL, '');
+  const storedHash = await getStorageItem(STORAGE_KEYS.USER_PASSWORD, '');
+  const inputHash = await hashPassword(password);
+  if (username === storedUsername && inputHash === storedHash) {
     localStorage.setItem(STORAGE_KEYS.IS_AUTHENTICATED, 'true');
     return true;
   }
@@ -383,9 +394,11 @@ export async function verifyTwoFactor(code: string): Promise<boolean> {
 }
 
 export async function changePassword(oldP: string, newP: string): Promise<boolean> {
-  const stored = await getStorageItem(STORAGE_KEYS.USER_PASSWORD, '');
-  if (oldP === stored) {
-    await setStorageItem(STORAGE_KEYS.USER_PASSWORD, newP);
+  const storedHash = await getStorageItem(STORAGE_KEYS.USER_PASSWORD, '');
+  const oldHash = await hashPassword(oldP);
+  if (oldHash === storedHash) {
+    const newHash = await hashPassword(newP);
+    await setStorageItem(STORAGE_KEYS.USER_PASSWORD, newHash);
     return true;
   }
   return false;

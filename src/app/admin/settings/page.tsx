@@ -68,7 +68,7 @@ export default function SettingsPage() {
     setTotpSecret(secret);
     // QR kodu dinamik olarak üret
     const { generateQRCode } = await import("@/lib/totp");
-    const qr = await generateQRCode(secret, "admin@psikolog.com");
+    const qr = await generateQRCode(secret, "admin");
     setQrDataUrl(qr);
     setTwoFAStep("setup");
     setVerifyCode("");
