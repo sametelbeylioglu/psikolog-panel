@@ -86,13 +86,10 @@ export default function LoginPage() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
-            <Link href="/" className="flex items-center gap-2"><Brain className="h-8 w-8 text-primary" /><span className="text-2xl font-bold">PsikoPanel</span></Link>
+            <Link href="/"><Brain className="h-10 w-10 text-primary" /></Link>
           </div>
           {!showTwoFactor ? (
-            <>
-              <CardTitle className="text-2xl">Giriş Yap</CardTitle>
-              <CardDescription>Admin paneline erişmek için giriş yapın</CardDescription>
-            </>
+            <></>
           ) : (
             <>
               <div className="flex justify-center mb-2"><div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center"><Shield className="h-6 w-6 text-primary" /></div></div>
