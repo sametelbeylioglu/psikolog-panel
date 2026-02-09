@@ -47,7 +47,6 @@ export default function LoginPage() {
             <Button type="submit" className="w-full" disabled={loading}>{loading ? "Giriş yapılıyor..." : showTwoFactor ? "Doğrula" : "Giriş Yap"}</Button>
             {showTwoFactor && <Button type="button" variant="ghost" className="w-full" onClick={() => { setShowTwoFactor(false); setTwoFactorCode(""); setError(""); }}>Geri Dön</Button>}
           </form>
-          <div className="mt-6 text-center"><p className="text-xs text-muted-foreground">Varsayılan: admin@psikolog.com / admin123</p></div>
         </CardContent>
       </Card>
     </div>
