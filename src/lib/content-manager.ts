@@ -319,14 +319,17 @@ async function hashPassword(password: string): Promise<string> {
 }
 
 // ============ AUTH ============
+const AUTH_VERSION = 'v3_hashed';
+
 export async function initializeAuth(): Promise<void> {
   if (typeof window === 'undefined') return;
-  const email = await getStorageItem(STORAGE_KEYS.USER_EMAIL, '');
-  if (!email) {
-    // Varsayılan hesap oluştur (şifre hash'li saklanır)
+  const version = await getStorageItem('auth_version', '');
+  if (version !== AUTH_VERSION) {
+    // Eski format veya ilk kurulum - yeni hash'li hesap oluştur
     const hashedPw = await hashPassword('admin123');
     await setStorageItem(STORAGE_KEYS.USER_EMAIL, 'admin');
     await setStorageItem(STORAGE_KEYS.USER_PASSWORD, hashedPw);
+    await setStorageItem('auth_version', AUTH_VERSION);
   }
 }
 
