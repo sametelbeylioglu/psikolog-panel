@@ -344,15 +344,30 @@ export async function isTwoFactorEnabled(): Promise<boolean> {
   return await getStorageItem(STORAGE_KEYS.TWO_FACTOR_ENABLED, false);
 }
 
-export async function getTwoFactorCode(): Promise<string | null> {
+export async function getTwoFactorSecret(): Promise<string | null> {
   return await getStorageItem(STORAGE_KEYS.TWO_FACTOR_CODE, null as string | null);
 }
 
+// Eski uyumluluk (getTwoFactorCode alias)
+export async function getTwoFactorCode(): Promise<string | null> {
+  return getTwoFactorSecret();
+}
+
+export async function saveTwoFactorSecret(secret: string): Promise<void> {
+  await setStorageItem(STORAGE_KEYS.TWO_FACTOR_CODE, secret);
+}
+
 export async function enableTwoFactor(): Promise<string> {
-  const code = Math.floor(100000 + Math.random() * 900000).toString();
+  // TOTP modülünden secret üret
+  const { generateTOTPSecret } = await import('./totp');
+  const secret = generateTOTPSecret();
+  await setStorageItem(STORAGE_KEYS.TWO_FACTOR_CODE, secret);
+  // Henüz etkinleştirme - doğrulama sonrası yapılacak
+  return secret;
+}
+
+export async function confirmTwoFactor(): Promise<void> {
   await setStorageItem(STORAGE_KEYS.TWO_FACTOR_ENABLED, true);
-  await setStorageItem(STORAGE_KEYS.TWO_FACTOR_CODE, code);
-  return code;
 }
 
 export async function disableTwoFactor(): Promise<void> {
@@ -361,8 +376,10 @@ export async function disableTwoFactor(): Promise<void> {
 }
 
 export async function verifyTwoFactor(code: string): Promise<boolean> {
-  const stored = await getTwoFactorCode();
-  return code === stored;
+  const secret = await getTwoFactorSecret();
+  if (!secret) return false;
+  const { verifyTOTPCode } = await import('./totp');
+  return verifyTOTPCode(secret, code);
 }
 
 export async function changePassword(oldP: string, newP: string): Promise<boolean> {
