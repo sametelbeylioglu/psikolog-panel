@@ -48,7 +48,6 @@ export default function HomePage() {
             </div>
             <div className="flex items-center gap-3">
               <Link href="/randevu"><Button>Randevu Al</Button></Link>
-              <Link href="/login"><Button variant="outline">Giriş</Button></Link>
             </div>
           </div>
         </div>
@@ -145,6 +144,8 @@ export default function HomePage() {
             <div className="flex items-center gap-2"><Brain className="h-5 w-5 text-primary" /><span className="font-semibold">{logo}</span></div>
             <div className="flex items-center gap-4">
               <Link href="/kvkk" className="text-sm text-muted-foreground hover:text-foreground transition-colors">KVKK & Gizlilik</Link>
+              <span className="text-muted-foreground">|</span>
+              <Link href="/login" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Giriş</Link>
               <span className="text-muted-foreground">|</span>
               <p className="text-sm text-muted-foreground">&copy; {new Date().getFullYear()} {logo}. Tüm hakları saklıdır.</p>
             </div>
