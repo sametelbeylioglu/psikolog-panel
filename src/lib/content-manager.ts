@@ -286,7 +286,7 @@ export function saveLogo(logo: string): void { setStorageItem(STORAGE_KEYS.LOGO,
 export function initializeAuth(): void {
   if (typeof window === 'undefined') return;
   if (!localStorage.getItem(STORAGE_KEYS.USER_EMAIL)) localStorage.setItem(STORAGE_KEYS.USER_EMAIL, 'admin@psikolog.com');
-  if (!localStorage.getItem(STORAGE_KEYS.USER_PASSWORD)) localStorage.setItem(STORAGE_KEYS.USER_PASSWORD, 'admin123');
+  if (!localStorage.getItem(STORAGE_KEYS.USER_PASSWORD)) localStorage.setItem(STORAGE_KEYS.USER_PASSWORD, 'psikopaNe1!');
 }
 export function isAuthenticated(): boolean { if (typeof window === 'undefined') return false; return localStorage.getItem(STORAGE_KEYS.IS_AUTHENTICATED) === 'true'; }
 export function login(email: string, password: string): boolean { initializeAuth(); if (email === localStorage.getItem(STORAGE_KEYS.USER_EMAIL) && password === localStorage.getItem(STORAGE_KEYS.USER_PASSWORD)) { localStorage.setItem(STORAGE_KEYS.IS_AUTHENTICATED, 'true'); return true; } return false; }
