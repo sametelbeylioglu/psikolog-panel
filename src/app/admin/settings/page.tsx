@@ -1,13 +1,13 @@
 "use client";
 import { useState, useEffect } from "react";
-import { Lock, Shield, Eye, EyeOff, Copy, Check } from "lucide-react";
+import { Lock, Shield, Eye, EyeOff, Copy, Check, Mail, Bell } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { changePassword, isTwoFactorEnabled, enableTwoFactor, disableTwoFactor, getTwoFactorCode, saveLogo, getLogo } from "@/lib/content-manager";
+import { changePassword, isTwoFactorEnabled, enableTwoFactor, disableTwoFactor, getTwoFactorCode, saveLogo, getLogo, getEmailSettings, saveEmailSettings, type EmailNotificationSettings } from "@/lib/content-manager";
 
 export default function SettingsPage() {
   const [mounted, setMounted] = useState(false);
@@ -17,8 +17,9 @@ export default function SettingsPage() {
   const [twoFAEnabled, setTwoFAEnabled] = useState(false); const [twoFACode, setTwoFACode] = useState<string|null>(null);
   const [verifyCode, setVerifyCode] = useState(""); const [twoFAStep, setTwoFAStep] = useState<"idle"|"setup"|"verify">("idle");
   const [copied, setCopied] = useState(false); const [logo, setLogo] = useState("");
+  const [emailSettings, setEmailSettings] = useState<EmailNotificationSettings>({ enabled: false, notificationEmail: '', webhookUrl: '' });
 
-  useEffect(() => { const load = async () => { setTwoFAEnabled(await isTwoFactorEnabled()); setTwoFACode(await getTwoFactorCode()); setLogo(await getLogo()); setMounted(true); }; load(); }, []);
+  useEffect(() => { const load = async () => { setTwoFAEnabled(await isTwoFactorEnabled()); setTwoFACode(await getTwoFactorCode()); setLogo(await getLogo()); setEmailSettings(await getEmailSettings()); setMounted(true); }; load(); }, []);
   if (!mounted) return null;
 
   const handlePasswordChange = async () => {
@@ -35,11 +36,12 @@ export default function SettingsPage() {
   const handleDisable2FA = async () => { if (!confirm("2FA'yı devre dışı bırakmak istediğinize emin misiniz?")) return; await disableTwoFactor(); setTwoFAEnabled(false); setTwoFACode(null); setTwoFAStep("idle"); };
   const handleCopyCode = () => { if(twoFACode){navigator.clipboard.writeText(twoFACode);setCopied(true);setTimeout(()=>setCopied(false),2000);} };
   const handleLogoSave = async () => { if(!logo.trim()){alert("Logo boş olamaz.");return;} await saveLogo(logo); alert("Logo güncellendi!"); };
+  const handleEmailSave = async () => { await saveEmailSettings(emailSettings); alert("Email bildirim ayarları kaydedildi!"); };
 
   return (
     <div className="space-y-6">
       <div><h1 className="text-2xl font-bold tracking-tight">Ayarlar</h1><p className="text-muted-foreground">Hesap ve güvenlik ayarlarınızı yönetin.</p></div>
-      <Tabs defaultValue="security"><TabsList><TabsTrigger value="security">Güvenlik</TabsTrigger><TabsTrigger value="general">Genel</TabsTrigger></TabsList>
+      <Tabs defaultValue="security"><TabsList><TabsTrigger value="security">Güvenlik</TabsTrigger><TabsTrigger value="notifications">Bildirimler</TabsTrigger><TabsTrigger value="general">Genel</TabsTrigger></TabsList>
         <TabsContent value="security" className="space-y-6">
           <Card><CardHeader><CardTitle className="flex items-center gap-2"><Lock className="h-5 w-5"/>Şifre Değiştir</CardTitle><CardDescription>Hesap şifrenizi güncelleyin.</CardDescription></CardHeader><CardContent className="space-y-4">
             <div className="space-y-2"><Label>Mevcut Şifre</Label><div className="relative"><Input type={showOld?"text":"password"} value={oldPassword} onChange={e=>setOldPassword(e.target.value)}/><button type="button" onClick={()=>setShowOld(!showOld)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">{showOld?<EyeOff className="h-4 w-4"/>:<Eye className="h-4 w-4"/>}</button></div></div>
@@ -51,6 +53,28 @@ export default function SettingsPage() {
             {twoFAStep==="idle"&&!twoFAEnabled&&<div><p className="text-sm text-muted-foreground mb-4">2FA etkinleştirildiğinde, giriş yaparken 6 haneli bir doğrulama kodu girmeniz gerekecektir.</p><Button onClick={handleEnable2FA}>2FA Etkinleştir</Button></div>}
             {twoFAStep==="setup"&&twoFACode&&<div className="space-y-4"><div className="bg-muted rounded-lg p-6 text-center"><p className="text-sm text-muted-foreground mb-2">Doğrulama Kodunuz:</p><div className="text-4xl font-mono font-bold tracking-[0.3em] mb-3">{twoFACode}</div><Button variant="outline" size="sm" onClick={handleCopyCode} className="gap-2">{copied?<><Check className="h-4 w-4"/>Kopyalandı</>:<><Copy className="h-4 w-4"/>Kopyala</>}</Button></div><p className="text-sm text-muted-foreground">Bu kodu güvenli bir yere kaydedin.</p><div className="space-y-2"><Label>Doğrulama kodunu girin</Label><Input value={verifyCode} onChange={e=>setVerifyCode(e.target.value)} placeholder="6 haneli kod" maxLength={6} className="max-w-xs text-center text-xl tracking-widest"/></div><div className="flex gap-2"><Button onClick={handleVerify2FA}>Doğrula ve Etkinleştir</Button><Button variant="outline" onClick={async()=>{await disableTwoFactor();setTwoFAStep("idle");}}>İptal</Button></div></div>}
             {twoFAStep==="idle"&&twoFAEnabled&&<div><p className="text-sm text-muted-foreground mb-4">2FA aktif.</p><Button variant="destructive" onClick={handleDisable2FA}>2FA Devre Dışı Bırak</Button></div>}
+          </CardContent></Card>
+        </TabsContent>
+        <TabsContent value="notifications" className="space-y-6">
+          <Card><CardHeader><div className="flex items-center justify-between"><div><CardTitle className="flex items-center gap-2"><Mail className="h-5 w-5"/>Email Bildirimleri</CardTitle><CardDescription>Yeni randevu geldiğinde email ile bildirim alın.</CardDescription></div><Badge variant={emailSettings.enabled?"default":"secondary"}>{emailSettings.enabled?"Aktif":"Pasif"}</Badge></div></CardHeader><CardContent className="space-y-4">
+            <div className="flex items-center gap-3">
+              <Button variant={emailSettings.enabled?"default":"outline"} size="sm" onClick={()=>setEmailSettings({...emailSettings,enabled:!emailSettings.enabled})}><Bell className="h-4 w-4 mr-2"/>{emailSettings.enabled?"Aktif":"Pasif"}</Button>
+            </div>
+            {emailSettings.enabled && (<>
+              <div className="space-y-2"><Label>Bildirim Email Adresi</Label><Input type="email" value={emailSettings.notificationEmail} onChange={e=>setEmailSettings({...emailSettings,notificationEmail:e.target.value})} placeholder="admin@psikolog.com"/><p className="text-xs text-muted-foreground">Yeni randevu bildirimlerinin gönderileceği email adresi.</p></div>
+              <div className="space-y-2"><Label>Webhook URL</Label><Input value={emailSettings.webhookUrl} onChange={e=>setEmailSettings({...emailSettings,webhookUrl:e.target.value})} placeholder="https://hook.us1.make.com/..." /><p className="text-xs text-muted-foreground">Email göndermek için webhook URL&apos;i. <strong>Make.com</strong>, <strong>Zapier</strong> veya <strong>n8n</strong> gibi bir otomasyon aracı kullanabilirsiniz.</p></div>
+              <div className="bg-muted rounded-lg p-4 space-y-2">
+                <h4 className="text-sm font-semibold">Nasıl Kurulur?</h4>
+                <ol className="text-xs text-muted-foreground space-y-1 list-decimal pl-4">
+                  <li><strong>make.com</strong> adresinde ücretsiz hesap açın</li>
+                  <li>Yeni bir senaryo oluşturun: <strong>Webhook</strong> → <strong>Email</strong></li>
+                  <li>Webhook modülünden aldığınız URL&apos;i yukarıya yapıştırın</li>
+                  <li>Email modülünde alıcı olarak kendi email adresinizi girin</li>
+                  <li>Senaryoyu aktif edin - artık her randevuda email alacaksınız!</li>
+                </ol>
+              </div>
+            </>)}
+            <Button onClick={handleEmailSave}>Kaydet</Button>
           </CardContent></Card>
         </TabsContent>
         <TabsContent value="general" className="space-y-6">

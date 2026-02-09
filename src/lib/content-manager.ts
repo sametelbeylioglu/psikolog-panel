@@ -374,6 +374,57 @@ export async function changePassword(oldP: string, newP: string): Promise<boolea
   return false;
 }
 
+// ============ EMAIL NOTIFICATION SETTINGS ============
+export interface EmailNotificationSettings {
+  enabled: boolean;
+  notificationEmail: string;
+  webhookUrl: string;
+}
+
+const defaultEmailSettings: EmailNotificationSettings = {
+  enabled: false,
+  notificationEmail: '',
+  webhookUrl: '',
+};
+
+export async function getEmailSettings(): Promise<EmailNotificationSettings> {
+  return getStorageItem('email_notification_settings', defaultEmailSettings);
+}
+
+export async function saveEmailSettings(settings: EmailNotificationSettings): Promise<void> {
+  await setStorageItem('email_notification_settings', settings);
+}
+
+export async function sendEmailNotification(appointment: {
+  clientName: string;
+  clientEmail: string;
+  clientPhone: string;
+  packageName: string;
+  date: string;
+  time: string;
+  notes?: string;
+}): Promise<boolean> {
+  const settings = await getEmailSettings();
+  if (!settings.enabled || !settings.webhookUrl) return false;
+
+  try {
+    await fetch(settings.webhookUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        to: settings.notificationEmail,
+        subject: `Yeni Randevu Talebi - ${appointment.clientName}`,
+        ...appointment,
+        message: `Yeni randevu talebi:\n\nDanışan: ${appointment.clientName}\nEmail: ${appointment.clientEmail}\nTelefon: ${appointment.clientPhone}\nPaket: ${appointment.packageName}\nTarih: ${appointment.date}\nSaat: ${appointment.time}${appointment.notes ? '\nNotlar: ' + appointment.notes : ''}`,
+      }),
+    });
+    return true;
+  } catch {
+    console.error('Email notification failed');
+    return false;
+  }
+}
+
 // ============ UTILITY ============
 export function formatTimeAgo(dateString: string): string {
   const date = new Date(dateString);

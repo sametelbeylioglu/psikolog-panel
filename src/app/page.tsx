@@ -5,6 +5,7 @@ import { Brain, Heart, Users, Shield, ArrowRight, Phone, Mail, MapPin, Star, Che
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import WhatsAppButton from "@/components/whatsapp-button";
 import { getHeroContent, getFeatures, getStats, getAboutContent, getPackagesAsServices, getContactInfo, getLogo, type HeroContent, type Feature, type Stat, type AboutContent, type Service, type ContactInfo } from "@/lib/content-manager";
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = { Brain, Heart, Users, Shield, Star, CheckCircle };
@@ -139,11 +140,18 @@ export default function HomePage() {
       </section>
 
       <footer className="py-8 border-t">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2"><Brain className="h-5 w-5 text-primary" /><span className="font-semibold">{logo}</span></div>
-          <p className="text-sm text-muted-foreground">&copy; {new Date().getFullYear()} {logo}. Tüm hakları saklıdır.</p>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-2"><Brain className="h-5 w-5 text-primary" /><span className="font-semibold">{logo}</span></div>
+            <div className="flex items-center gap-4">
+              <Link href="/kvkk" className="text-sm text-muted-foreground hover:text-foreground transition-colors">KVKK & Gizlilik</Link>
+              <span className="text-muted-foreground">|</span>
+              <p className="text-sm text-muted-foreground">&copy; {new Date().getFullYear()} {logo}. Tüm hakları saklıdır.</p>
+            </div>
+          </div>
         </div>
       </footer>
+      <WhatsAppButton />
     </div>
   );
 }

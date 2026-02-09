@@ -7,7 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { getPackages, saveAppointment, addNotification, getLogo, generateId, type TherapyPackage } from "@/lib/content-manager";
+import WhatsAppButton from "@/components/whatsapp-button";
+import { getPackages, saveAppointment, addNotification, sendEmailNotification, getLogo, generateId, type TherapyPackage } from "@/lib/content-manager";
 
 export default function RandevuPage() {
   const [step, setStep] = useState(1);
@@ -47,6 +48,11 @@ export default function RandevuPage() {
       id: generateId(), type: "appointment", title: "Yeni Randevu Talebi",
       message: `${formData.name} - ${selectedPackage.name} için yeni randevu talebi.`,
       read: false, createdAt: new Date().toISOString(),
+    });
+    // Email bildirimi gonder (ayarlanmissa)
+    await sendEmailNotification({
+      clientName: formData.name, clientEmail: formData.email, clientPhone: formData.phone,
+      packageName: selectedPackage.name, date: formData.date, time: formData.time, notes: formData.notes,
     });
     setSubmitted(true);
   };
@@ -121,6 +127,7 @@ export default function RandevuPage() {
           </CardContent></Card>)}
         </>)}
       </div>
+      <WhatsAppButton />
     </div>
   );
 }
