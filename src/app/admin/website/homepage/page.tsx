@@ -1,18 +1,19 @@
 "use client";
 import { useState, useEffect } from "react";
-import { Save, Plus, Trash2, Upload, X } from "lucide-react";
+import { Save, Plus, Trash2, Upload, X, Eye, EyeOff } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { getHeroContent, saveHeroContent, getFeatures, saveFeatures, getStats, saveStats, generateId, type HeroContent, type Feature, type Stat } from "@/lib/content-manager";
+import { getHeroContent, saveHeroContent, getFeatures, saveFeatures, getStats, saveStats, getSectionVisibility, saveSectionVisibility, generateId, type HeroContent, type Feature, type Stat, type SectionVisibility } from "@/lib/content-manager";
 
 export default function HomepageCMSPage() {
   const [hero, setHero] = useState<HeroContent>({title:"",subtitle:"",description:"",buttonText:"",buttonLink:""});
   const [features, setFeatures] = useState<Feature[]>([]); const [stats, setStats] = useState<Stat[]>([]); const [mounted, setMounted] = useState(false);
+  const [visibility, setVisibility] = useState<SectionVisibility>({ hero:true, stats:true, features:true, about:true, packages:true, contact:true, navbar:true });
 
-  useEffect(() => { const load = async () => { setHero(await getHeroContent()); setFeatures(await getFeatures()); setStats(await getStats()); setMounted(true); }; load(); }, []);
+  useEffect(() => { const load = async () => { setHero(await getHeroContent()); setFeatures(await getFeatures()); setStats(await getStats()); setVisibility(await getSectionVisibility()); setMounted(true); }; load(); }, []);
   if (!mounted) return null;
 
   const handleHeroSave = async () => { await saveHeroContent(hero); alert("Hero bölümü güncellendi!"); };
@@ -31,7 +32,7 @@ export default function HomepageCMSPage() {
   return (
     <div className="space-y-6">
       <div><h1 className="text-2xl font-bold tracking-tight">Ana Sayfa Düzenleme</h1><p className="text-muted-foreground">Public ana sayfanızın içeriğini düzenleyin.</p></div>
-      <Tabs defaultValue="hero"><TabsList><TabsTrigger value="hero">Hero Bölümü</TabsTrigger><TabsTrigger value="features">Hizmetler</TabsTrigger><TabsTrigger value="stats">İstatistikler</TabsTrigger></TabsList>
+      <Tabs defaultValue="visibility"><TabsList><TabsTrigger value="visibility">Bölüm Görünürlüğü</TabsTrigger><TabsTrigger value="hero">Hero Bölümü</TabsTrigger><TabsTrigger value="features">Hizmetler</TabsTrigger><TabsTrigger value="stats">İstatistikler</TabsTrigger></TabsList>
         <TabsContent value="hero"><Card><CardHeader><CardTitle>Hero Bölümü</CardTitle><CardDescription>Ana sayfanın üst kısmında görünen bölüm.</CardDescription></CardHeader><CardContent className="space-y-4">
           <div className="grid md:grid-cols-2 gap-4"><div className="space-y-2"><Label>Alt Başlık (Badge)</Label><Input value={hero.subtitle} onChange={e=>setHero({...hero,subtitle:e.target.value})} placeholder="Uzman Psikolog"/></div><div className="space-y-2"><Label>Buton Linki</Label><Input value={hero.buttonLink} onChange={e=>setHero({...hero,buttonLink:e.target.value})} placeholder="/randevu"/></div></div>
           <div className="space-y-2"><Label>Ana Başlık</Label><Input value={hero.title} onChange={e=>setHero({...hero,title:e.target.value})} placeholder="Profesyonel Psikolojik Danışmanlık"/></div>
@@ -47,6 +48,35 @@ export default function HomepageCMSPage() {
         <TabsContent value="stats"><Card><CardHeader className="flex flex-row items-center justify-between"><div><CardTitle>İstatistikler</CardTitle><CardDescription>Ana sayfadaki istatistik sayaçları.</CardDescription></div><Button onClick={addStat} className="gap-2"><Plus className="h-4 w-4"/>Ekle</Button></CardHeader><CardContent className="space-y-4">
           {stats.map(s=>(<div key={s.id} className="flex items-end gap-3 border rounded-lg p-4"><div className="flex-1 space-y-1"><Label className="text-xs">Değer</Label><Input value={s.value} onChange={e=>updateStat(s.id,{value:e.target.value})} placeholder="1000+"/></div><div className="flex-1 space-y-1"><Label className="text-xs">Etiket</Label><Input value={s.label} onChange={e=>updateStat(s.id,{label:e.target.value})} placeholder="Mutlu Danışan"/></div><Button variant="ghost" size="icon" className="h-10 text-destructive flex-shrink-0" onClick={()=>removeStat(s.id)}><Trash2 className="h-4 w-4"/></Button></div>))}
           <Button onClick={saveAllStats} className="gap-2"><Save className="h-4 w-4"/>Tümünü Kaydet</Button>
+        </CardContent></Card></TabsContent>
+
+        <TabsContent value="visibility"><Card><CardHeader><CardTitle>Bölüm Görünürlüğü</CardTitle><CardDescription>Ana sayfadaki bölümleri gösterin veya gizleyin. Kapalı olan bölümler ziyaretçilere görünmez.</CardDescription></CardHeader><CardContent className="space-y-4">
+          {([
+            { key: 'navbar' as const, label: 'Navigasyon Menüsü', desc: 'Üst menü çubuğu (logo, linkler, randevu butonu)' },
+            { key: 'hero' as const, label: 'Hero Bölümü', desc: 'Ana başlık, açıklama ve aksiyon butonları' },
+            { key: 'stats' as const, label: 'İstatistikler', desc: 'Sayaç/istatistik bölümü' },
+            { key: 'features' as const, label: 'Hizmetler', desc: 'Hizmet kartları bölümü' },
+            { key: 'about' as const, label: 'Hakkımda', desc: 'Hakkımda / tanıtım bölümü' },
+            { key: 'packages' as const, label: 'Terapi Paketleri', desc: 'Fiyatlandırma ve paket kartları' },
+            { key: 'contact' as const, label: 'İletişim', desc: 'Telefon, email ve adres bilgileri' },
+          ]).map(item => (
+            <div key={item.key} className="flex items-center justify-between border rounded-lg p-4">
+              <div>
+                <div className="font-medium">{item.label}</div>
+                <div className="text-sm text-muted-foreground">{item.desc}</div>
+              </div>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={visibility[item.key]}
+                onClick={() => setVisibility(prev => ({ ...prev, [item.key]: !prev[item.key] }))}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${visibility[item.key] ? 'bg-primary' : 'bg-muted-foreground/30'}`}
+              >
+                <span className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-lg transition-transform ${visibility[item.key] ? 'translate-x-[22px]' : 'translate-x-[2px]'}`} />
+              </button>
+            </div>
+          ))}
+          <Button onClick={async () => { await saveSectionVisibility(visibility); alert("Bölüm görünürlüğü kaydedildi!"); }} className="gap-2"><Save className="h-4 w-4"/>Kaydet</Button>
         </CardContent></Card></TabsContent>
       </Tabs>
     </div>

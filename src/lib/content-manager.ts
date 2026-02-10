@@ -407,6 +407,30 @@ export async function changePassword(oldP: string, newP: string): Promise<boolea
   return false;
 }
 
+// ============ SECTION VISIBILITY ============
+export interface SectionVisibility {
+  hero: boolean;
+  stats: boolean;
+  features: boolean;
+  about: boolean;
+  packages: boolean;
+  contact: boolean;
+  navbar: boolean;
+}
+
+const defaultVisibility: SectionVisibility = {
+  hero: true,
+  stats: true,
+  features: true,
+  about: true,
+  packages: true,
+  contact: true,
+  navbar: true,
+};
+
+export async function getSectionVisibility(): Promise<SectionVisibility> { return getStorageItem('section_visibility', defaultVisibility); }
+export async function saveSectionVisibility(v: SectionVisibility): Promise<void> { await setStorageItem('section_visibility', v); }
+
 // ============ EMAIL NOTIFICATION SETTINGS ============
 export interface EmailNotificationSettings {
   enabled: boolean;
