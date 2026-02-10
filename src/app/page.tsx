@@ -1,5 +1,6 @@
 "use client";
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
+import { ChevronLeft, ChevronRight as ChevronRightIcon } from "lucide-react";
 import Link from "next/link";
 import { Brain, Heart, Users, Shield, ArrowRight, Phone, Mail, MapPin, Star, CheckCircle, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -9,6 +10,61 @@ import WhatsAppButton from "@/components/whatsapp-button";
 import { getHeroContent, getFeatures, getStats, getAboutContent, getPackagesAsServices, getContactInfo, getLogo, getLogoImage, getSectionVisibility, getBlogPosts, type HeroContent, type Feature, type Stat, type AboutContent, type Service, type ContactInfo, type SectionVisibility, type BlogPost } from "@/lib/content-manager";
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = { Brain, Heart, Users, Shield, Star, CheckCircle };
+
+function HorizontalScroll({ children, visibleCount }: { children: React.ReactNode; visibleCount: number }) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [canLeft, setCanLeft] = useState(false);
+  const [canRight, setCanRight] = useState(false);
+
+  const checkScroll = () => {
+    const el = scrollRef.current;
+    if (!el) return;
+    setCanLeft(el.scrollLeft > 5);
+    setCanRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 5);
+  };
+
+  useEffect(() => {
+    checkScroll();
+    const el = scrollRef.current;
+    if (el) el.addEventListener("scroll", checkScroll, { passive: true });
+    window.addEventListener("resize", checkScroll);
+    return () => { el?.removeEventListener("scroll", checkScroll); window.removeEventListener("resize", checkScroll); };
+  }, [children]);
+
+  const scroll = (dir: "left" | "right") => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const cardWidth = el.firstElementChild ? (el.firstElementChild as HTMLElement).offsetWidth + 24 : 300;
+    el.scrollBy({ left: dir === "right" ? cardWidth : -cardWidth, behavior: "smooth" });
+  };
+
+  // visibleCount'a göre kart genişliği CSS variable olarak hesaplanır
+  const cardStyle = {
+    "--visible": visibleCount,
+  } as React.CSSProperties;
+
+  return (
+    <div className="relative group" style={cardStyle}>
+      {canLeft && (
+        <button onClick={() => scroll("left")} className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10 w-10 h-10 rounded-full bg-background border shadow-lg flex items-center justify-center hover:bg-muted transition-colors opacity-0 group-hover:opacity-100">
+          <ChevronLeft className="h-5 w-5" />
+        </button>
+      )}
+      <div
+        ref={scrollRef}
+        className="flex gap-6 overflow-x-auto scroll-smooth scrollbar-hide pb-2"
+        style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+      >
+        {children}
+      </div>
+      {canRight && (
+        <button onClick={() => scroll("right")} className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10 w-10 h-10 rounded-full bg-background border shadow-lg flex items-center justify-center hover:bg-muted transition-colors opacity-0 group-hover:opacity-100">
+          <ChevronRightIcon className="h-5 w-5" />
+        </button>
+      )}
+    </div>
+  );
+}
 
 function AnimatedStat({ value, label }: { value: string; label: string }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -142,11 +198,19 @@ export default function HomePage() {
       {vis.features && <section id="hizmetler" className="py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12"><h2 className="text-3xl font-bold tracking-tight mb-4">Hizmetlerimiz</h2><p className="text-muted-foreground max-w-2xl mx-auto">Profesyonel psikolojik danışmanlık hizmetlerimiz ile size özel çözümler sunuyoruz.</p></div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {features.map(f => { const Icon = iconMap[f.icon] || Brain; return (
-              <Card key={f.id} className="text-center hover:shadow-lg transition-shadow"><CardHeader><div className="mx-auto w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-2"><Icon className="h-6 w-6 text-primary" /></div><CardTitle className="text-lg">{f.title}</CardTitle></CardHeader><CardContent><p className="text-sm text-muted-foreground">{f.description}</p></CardContent></Card>
-            ); })}
-          </div>
+          {features.length <= 4 ? (
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {features.map(f => { const Icon = iconMap[f.icon] || Brain; return (
+                <Card key={f.id} className="text-center hover:shadow-lg transition-shadow"><CardHeader><div className="mx-auto w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-2"><Icon className="h-6 w-6 text-primary" /></div><CardTitle className="text-lg">{f.title}</CardTitle></CardHeader><CardContent><p className="text-sm text-muted-foreground">{f.description}</p></CardContent></Card>
+              ); })}
+            </div>
+          ) : (
+            <HorizontalScroll visibleCount={4}>
+              {features.map(f => { const Icon = iconMap[f.icon] || Brain; return (
+                <Card key={f.id} className="text-center hover:shadow-lg transition-shadow flex-shrink-0 w-[calc((100%-72px)/4)]" style={{ minWidth: "250px" }}><CardHeader><div className="mx-auto w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-2"><Icon className="h-6 w-6 text-primary" /></div><CardTitle className="text-lg">{f.title}</CardTitle></CardHeader><CardContent><p className="text-sm text-muted-foreground">{f.description}</p></CardContent></Card>
+              ); })}
+            </HorizontalScroll>
+          )}
         </div>
       </section>}
 
@@ -167,51 +231,95 @@ export default function HomePage() {
       {vis.packages && <section id="paketler" className="py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12"><h2 className="text-3xl font-bold tracking-tight mb-4">Terapi Paketleri</h2><p className="text-muted-foreground max-w-2xl mx-auto">İhtiyaçlarınıza uygun terapi paketini seçin.</p></div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {services.map(s => (
-              <Card key={s.id} className={`flex flex-col h-full relative ${s.popular ? 'border-primary shadow-lg' : ''}`}>
-                {s.popular && <Badge className="absolute -top-3 left-1/2 -translate-x-1/2">En Popüler</Badge>}
-                <CardHeader className="flex-shrink-0"><CardTitle className="text-xl">{s.name}</CardTitle><p className="text-sm text-muted-foreground">{s.description}</p></CardHeader>
-                <CardContent className="flex flex-col flex-grow">
-                  <div className="flex-grow">
-                    <div className="mb-4"><span className="text-3xl font-bold">{s.price.toLocaleString('tr-TR')} ₺</span><span className="text-muted-foreground text-sm ml-1">/ {s.sessions} seans</span></div>
-                    <div className="text-sm text-muted-foreground mb-4">Seans süresi: {s.duration}</div>
-                    <ul className="space-y-2 mb-6">{s.features.map((f, i) => <li key={i} className="flex items-start gap-2 text-sm"><CheckCircle className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />{f}</li>)}</ul>
-                  </div>
-                  <Link href="/randevu" className="mt-auto"><Button className="w-full" variant={s.popular ? "default" : "outline"}>Randevu Al</Button></Link>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+          {services.length <= 3 ? (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {services.map(s => (
+                <Card key={s.id} className={`flex flex-col h-full relative ${s.popular ? 'border-primary shadow-lg' : ''}`}>
+                  {s.popular && <Badge className="absolute -top-3 left-1/2 -translate-x-1/2">En Popüler</Badge>}
+                  <CardHeader className="flex-shrink-0"><CardTitle className="text-xl">{s.name}</CardTitle><p className="text-sm text-muted-foreground">{s.description}</p></CardHeader>
+                  <CardContent className="flex flex-col flex-grow">
+                    <div className="flex-grow">
+                      <div className="mb-4"><span className="text-3xl font-bold">{s.price.toLocaleString('tr-TR')} ₺</span><span className="text-muted-foreground text-sm ml-1">/ {s.sessions} seans</span></div>
+                      <div className="text-sm text-muted-foreground mb-4">Seans süresi: {s.duration}</div>
+                      <ul className="space-y-2 mb-6">{s.features.map((f, i) => <li key={i} className="flex items-start gap-2 text-sm"><CheckCircle className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />{f}</li>)}</ul>
+                    </div>
+                    <Link href="/randevu" className="mt-auto"><Button className="w-full" variant={s.popular ? "default" : "outline"}>Randevu Al</Button></Link>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <HorizontalScroll visibleCount={3}>
+              {services.map(s => (
+                <Card key={s.id} className={`flex flex-col h-full relative flex-shrink-0 w-[calc((100%-48px)/3)] ${s.popular ? 'border-primary shadow-lg' : ''}`} style={{ minWidth: "300px" }}>
+                  {s.popular && <Badge className="absolute -top-3 left-1/2 -translate-x-1/2">En Popüler</Badge>}
+                  <CardHeader className="flex-shrink-0"><CardTitle className="text-xl">{s.name}</CardTitle><p className="text-sm text-muted-foreground">{s.description}</p></CardHeader>
+                  <CardContent className="flex flex-col flex-grow">
+                    <div className="flex-grow">
+                      <div className="mb-4"><span className="text-3xl font-bold">{s.price.toLocaleString('tr-TR')} ₺</span><span className="text-muted-foreground text-sm ml-1">/ {s.sessions} seans</span></div>
+                      <div className="text-sm text-muted-foreground mb-4">Seans süresi: {s.duration}</div>
+                      <ul className="space-y-2 mb-6">{s.features.map((f, i) => <li key={i} className="flex items-start gap-2 text-sm"><CheckCircle className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />{f}</li>)}</ul>
+                    </div>
+                    <Link href="/randevu" className="mt-auto"><Button className="w-full" variant={s.popular ? "default" : "outline"}>Randevu Al</Button></Link>
+                  </CardContent>
+                </Card>
+              ))}
+            </HorizontalScroll>
+          )}
         </div>
       </section>}
 
       {vis.blog && blogPosts.length > 0 && <section id="blog" className="py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12"><h2 className="text-3xl font-bold tracking-tight mb-4">Blog</h2><p className="text-muted-foreground max-w-2xl mx-auto">Psikoloji dünyasından güncel yazılar ve faydalı bilgiler.</p></div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {blogPosts.slice(0, 6).map(post => (
-              <Link key={post.id} href={`/blog?id=${post.id}`}>
-                <Card className="flex flex-col h-full hover:shadow-lg transition-all hover:-translate-y-1 cursor-pointer overflow-hidden">
-                  {post.image && <img src={post.image} alt={post.title} className="w-full h-48 object-cover" />}
-                  <CardHeader className="flex-shrink-0">
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
-                      <Calendar className="h-3 w-3" />
-                      <span>{new Date(post.createdAt).toLocaleDateString("tr-TR", { year:"numeric", month:"long", day:"numeric" })}</span>
-                      <span>·</span>
-                      <span>{post.author}</span>
-                    </div>
-                    <CardTitle className="text-lg leading-tight">{post.title}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="flex flex-col flex-grow">
-                    <p className="text-sm text-muted-foreground line-clamp-3 flex-grow">{post.excerpt || post.content.replace(/<[^>]*>/g, '').substring(0, 150) + "..."}</p>
-                    <span className="text-xs text-primary font-medium mt-2 flex items-center gap-1">Devamını Oku <ArrowRight className="h-3 w-3" /></span>
-                  </CardContent>
-                </Card>
-              </Link>
-            ))}
-          </div>
-          {blogPosts.length > 6 && <div className="text-center mt-8"><Link href="/blog"><Button variant="outline" className="gap-2">Tüm Yazıları Gör <ArrowRight className="h-4 w-4" /></Button></Link></div>}
+          {blogPosts.length <= 3 ? (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {blogPosts.map(post => (
+                <Link key={post.id} href={`/blog?id=${post.id}`}>
+                  <Card className="flex flex-col h-full hover:shadow-lg transition-all hover:-translate-y-1 cursor-pointer overflow-hidden">
+                    {post.image && <img src={post.image} alt={post.title} className="w-full h-48 object-cover" />}
+                    <CardHeader className="flex-shrink-0">
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
+                        <Calendar className="h-3 w-3" />
+                        <span>{new Date(post.createdAt).toLocaleDateString("tr-TR", { year:"numeric", month:"long", day:"numeric" })}</span>
+                        <span>·</span>
+                        <span>{post.author}</span>
+                      </div>
+                      <CardTitle className="text-lg leading-tight">{post.title}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="flex flex-col flex-grow">
+                      <p className="text-sm text-muted-foreground line-clamp-3 flex-grow">{post.excerpt || post.content.replace(/<[^>]*>/g, '').substring(0, 150) + "..."}</p>
+                      <span className="text-xs text-primary font-medium mt-2 flex items-center gap-1">Devamını Oku <ArrowRight className="h-3 w-3" /></span>
+                    </CardContent>
+                  </Card>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <HorizontalScroll visibleCount={3}>
+              {blogPosts.map(post => (
+                <Link key={post.id} href={`/blog?id=${post.id}`} className="flex-shrink-0 w-[calc((100%-48px)/3)]" style={{ minWidth: "300px" }}>
+                  <Card className="flex flex-col h-full hover:shadow-lg transition-all hover:-translate-y-1 cursor-pointer overflow-hidden">
+                    {post.image && <img src={post.image} alt={post.title} className="w-full h-48 object-cover" />}
+                    <CardHeader className="flex-shrink-0">
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
+                        <Calendar className="h-3 w-3" />
+                        <span>{new Date(post.createdAt).toLocaleDateString("tr-TR", { year:"numeric", month:"long", day:"numeric" })}</span>
+                        <span>·</span>
+                        <span>{post.author}</span>
+                      </div>
+                      <CardTitle className="text-lg leading-tight">{post.title}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="flex flex-col flex-grow">
+                      <p className="text-sm text-muted-foreground line-clamp-3 flex-grow">{post.excerpt || post.content.replace(/<[^>]*>/g, '').substring(0, 150) + "..."}</p>
+                      <span className="text-xs text-primary font-medium mt-2 flex items-center gap-1">Devamını Oku <ArrowRight className="h-3 w-3" /></span>
+                    </CardContent>
+                  </Card>
+                </Link>
+              ))}
+            </HorizontalScroll>
+          )}
+          <div className="text-center mt-8"><Link href="/blog"><Button variant="outline" className="gap-2">Tüm Yazıları Gör <ArrowRight className="h-4 w-4" /></Button></Link></div>
         </div>
       </section>}
 

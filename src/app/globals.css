@@ -125,6 +125,10 @@
   }
 }
 
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
 [contenteditable]:empty:before {
   content: attr(data-placeholder);
   color: hsl(var(--muted-foreground));
