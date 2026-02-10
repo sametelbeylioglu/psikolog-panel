@@ -11,7 +11,7 @@ import { getHeroContent, saveHeroContent, getFeatures, saveFeatures, getStats, s
 export default function HomepageCMSPage() {
   const [hero, setHero] = useState<HeroContent>({title:"",subtitle:"",description:"",buttonText:"",buttonLink:""});
   const [features, setFeatures] = useState<Feature[]>([]); const [stats, setStats] = useState<Stat[]>([]); const [mounted, setMounted] = useState(false);
-  const [visibility, setVisibility] = useState<SectionVisibility>({ hero:true, stats:true, features:true, about:true, packages:true, contact:true, navbar:true });
+  const [visibility, setVisibility] = useState<SectionVisibility>({ hero:true, stats:true, features:true, about:true, packages:true, contact:true, navbar:true, blog:true });
 
   useEffect(() => { const load = async () => { setHero(await getHeroContent()); setFeatures(await getFeatures()); setStats(await getStats()); setVisibility(await getSectionVisibility()); setMounted(true); }; load(); }, []);
   if (!mounted) return null;
@@ -58,6 +58,7 @@ export default function HomepageCMSPage() {
             { key: 'features' as const, label: 'Hizmetler', desc: 'Hizmet kartları bölümü' },
             { key: 'about' as const, label: 'Hakkımda', desc: 'Hakkımda / tanıtım bölümü' },
             { key: 'packages' as const, label: 'Terapi Paketleri', desc: 'Fiyatlandırma ve paket kartları' },
+            { key: 'blog' as const, label: 'Blog', desc: 'Blog yazıları bölümü' },
             { key: 'contact' as const, label: 'İletişim', desc: 'Telefon, email ve adres bilgileri' },
           ]).map(item => (
             <div key={item.key} className="flex items-center justify-between border rounded-lg p-4">

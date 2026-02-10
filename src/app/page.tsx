@@ -1,12 +1,12 @@
 "use client";
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Brain, Heart, Users, Shield, ArrowRight, Phone, Mail, MapPin, Star, CheckCircle } from "lucide-react";
+import { Brain, Heart, Users, Shield, ArrowRight, Phone, Mail, MapPin, Star, CheckCircle, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import WhatsAppButton from "@/components/whatsapp-button";
-import { getHeroContent, getFeatures, getStats, getAboutContent, getPackagesAsServices, getContactInfo, getLogo, getSectionVisibility, type HeroContent, type Feature, type Stat, type AboutContent, type Service, type ContactInfo, type SectionVisibility } from "@/lib/content-manager";
+import { getHeroContent, getFeatures, getStats, getAboutContent, getPackagesAsServices, getContactInfo, getLogo, getSectionVisibility, getBlogPosts, type HeroContent, type Feature, type Stat, type AboutContent, type Service, type ContactInfo, type SectionVisibility, type BlogPost } from "@/lib/content-manager";
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = { Brain, Heart, Users, Shield, Star, CheckCircle };
 
@@ -18,7 +18,8 @@ export default function HomePage() {
   const [services, setServices] = useState<Service[]>([]);
   const [contact, setContact] = useState<ContactInfo | null>(null);
   const [logo, setLogo] = useState("PsikoPanel");
-  const [vis, setVis] = useState<SectionVisibility>({ hero:true, stats:true, features:true, about:true, packages:true, contact:true, navbar:true });
+  const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
+  const [vis, setVis] = useState<SectionVisibility>({ hero:true, stats:true, features:true, about:true, packages:true, contact:true, navbar:true, blog:true });
 
   useEffect(() => {
     const load = async () => {
@@ -29,6 +30,7 @@ export default function HomePage() {
       setServices(await getPackagesAsServices());
       setContact(await getContactInfo());
       setLogo(await getLogo());
+      setBlogPosts((await getBlogPosts()).filter(p => p.published));
       setVis(await getSectionVisibility());
     };
     load();
@@ -46,6 +48,7 @@ export default function HomePage() {
               {vis.features && <a href="#hizmetler" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Hizmetler</a>}
               {vis.about && <a href="#hakkimda" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Hakkımda</a>}
               {vis.packages && <a href="#paketler" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Paketler</a>}
+              {vis.blog && <a href="#blog" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Blog</a>}
               {vis.contact && <a href="#iletisim" className="text-sm text-muted-foreground hover:text-foreground transition-colors">İletişim</a>}
             </div>
             <div className="flex items-center gap-3">
@@ -122,6 +125,31 @@ export default function HomePage() {
                     <ul className="space-y-2 mb-6">{s.features.map((f, i) => <li key={i} className="flex items-start gap-2 text-sm"><CheckCircle className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />{f}</li>)}</ul>
                   </div>
                   <Link href="/randevu" className="mt-auto"><Button className="w-full" variant={s.popular ? "default" : "outline"}>Randevu Al</Button></Link>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>}
+
+      {vis.blog && blogPosts.length > 0 && <section id="blog" className="py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12"><h2 className="text-3xl font-bold tracking-tight mb-4">Blog</h2><p className="text-muted-foreground max-w-2xl mx-auto">Psikoloji dünyasından güncel yazılar ve faydalı bilgiler.</p></div>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {blogPosts.slice(0, 6).map(post => (
+              <Card key={post.id} className="flex flex-col h-full hover:shadow-lg transition-shadow overflow-hidden">
+                {post.image && <img src={post.image} alt={post.title} className="w-full h-48 object-cover" />}
+                <CardHeader className="flex-shrink-0">
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
+                    <Calendar className="h-3 w-3" />
+                    <span>{new Date(post.createdAt).toLocaleDateString("tr-TR", { year:"numeric", month:"long", day:"numeric" })}</span>
+                    <span>·</span>
+                    <span>{post.author}</span>
+                  </div>
+                  <CardTitle className="text-lg leading-tight">{post.title}</CardTitle>
+                </CardHeader>
+                <CardContent className="flex flex-col flex-grow">
+                  <p className="text-sm text-muted-foreground line-clamp-3 flex-grow">{post.excerpt || post.content.substring(0, 150) + "..."}</p>
                 </CardContent>
               </Card>
             ))}

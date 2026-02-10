@@ -416,6 +416,7 @@ export interface SectionVisibility {
   packages: boolean;
   contact: boolean;
   navbar: boolean;
+  blog: boolean;
 }
 
 const defaultVisibility: SectionVisibility = {
@@ -426,6 +427,7 @@ const defaultVisibility: SectionVisibility = {
   packages: true,
   contact: true,
   navbar: true,
+  blog: true,
 };
 
 export async function getSectionVisibility(): Promise<SectionVisibility> { return getStorageItem('section_visibility', defaultVisibility); }
