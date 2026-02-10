@@ -139,23 +139,27 @@ export default function HomePage() {
           <div className="text-center mb-12"><h2 className="text-3xl font-bold tracking-tight mb-4">Blog</h2><p className="text-muted-foreground max-w-2xl mx-auto">Psikoloji dünyasından güncel yazılar ve faydalı bilgiler.</p></div>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {blogPosts.slice(0, 6).map(post => (
-              <Card key={post.id} className="flex flex-col h-full hover:shadow-lg transition-shadow overflow-hidden">
-                {post.image && <img src={post.image} alt={post.title} className="w-full h-48 object-cover" />}
-                <CardHeader className="flex-shrink-0">
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
-                    <Calendar className="h-3 w-3" />
-                    <span>{new Date(post.createdAt).toLocaleDateString("tr-TR", { year:"numeric", month:"long", day:"numeric" })}</span>
-                    <span>·</span>
-                    <span>{post.author}</span>
-                  </div>
-                  <CardTitle className="text-lg leading-tight">{post.title}</CardTitle>
-                </CardHeader>
-                <CardContent className="flex flex-col flex-grow">
-                  <p className="text-sm text-muted-foreground line-clamp-3 flex-grow">{post.excerpt || post.content.substring(0, 150) + "..."}</p>
-                </CardContent>
-              </Card>
+              <Link key={post.id} href={`/blog?id=${post.id}`}>
+                <Card className="flex flex-col h-full hover:shadow-lg transition-all hover:-translate-y-1 cursor-pointer overflow-hidden">
+                  {post.image && <img src={post.image} alt={post.title} className="w-full h-48 object-cover" />}
+                  <CardHeader className="flex-shrink-0">
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
+                      <Calendar className="h-3 w-3" />
+                      <span>{new Date(post.createdAt).toLocaleDateString("tr-TR", { year:"numeric", month:"long", day:"numeric" })}</span>
+                      <span>·</span>
+                      <span>{post.author}</span>
+                    </div>
+                    <CardTitle className="text-lg leading-tight">{post.title}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="flex flex-col flex-grow">
+                    <p className="text-sm text-muted-foreground line-clamp-3 flex-grow">{post.excerpt || post.content.replace(/<[^>]*>/g, '').substring(0, 150) + "..."}</p>
+                    <span className="text-xs text-primary font-medium mt-2 flex items-center gap-1">Devamını Oku <ArrowRight className="h-3 w-3" /></span>
+                  </CardContent>
+                </Card>
+              </Link>
             ))}
           </div>
+          {blogPosts.length > 6 && <div className="text-center mt-8"><Link href="/blog"><Button variant="outline" className="gap-2">Tüm Yazıları Gör <ArrowRight className="h-4 w-4" /></Button></Link></div>}
         </div>
       </section>}
 
