@@ -8,18 +8,19 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import WhatsAppButton from "@/components/whatsapp-button";
-import { getPackages, saveAppointment, addNotification, sendEmailNotification, getLogo, generateId, type TherapyPackage } from "@/lib/content-manager";
+import { getPackages, saveAppointment, addNotification, sendEmailNotification, getLogo, getLogoImage, generateId, type TherapyPackage } from "@/lib/content-manager";
 
 export default function RandevuPage() {
   const [step, setStep] = useState(1);
   const [packages, setPackages] = useState<TherapyPackage[]>([]);
   const [logo, setLogo] = useState("PsikoPanel");
+  const [logoImg, setLogoImg] = useState("");
   const [selectedPackage, setSelectedPackage] = useState<TherapyPackage | null>(null);
   const [formData, setFormData] = useState({ name: "", email: "", phone: "", date: "", time: "", notes: "" });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitted, setSubmitted] = useState(false);
 
-  useEffect(() => { const load = async () => { setPackages(await getPackages()); setLogo(await getLogo()); }; load(); }, []);
+  useEffect(() => { const load = async () => { setPackages(await getPackages()); setLogo(await getLogo()); setLogoImg(await getLogoImage()); }; load(); }, []);
 
   const availableTimes = ["09:00", "10:00", "11:00", "13:00", "14:00", "15:00", "16:00", "17:00"];
 
@@ -63,7 +64,7 @@ export default function RandevuPage() {
     <div className="min-h-screen bg-muted/50">
       <nav className="border-b bg-background">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex h-16 items-center justify-between">
-          <Link href="/" className="flex items-center gap-2"><Brain className="h-6 w-6 text-primary" /><span className="text-xl font-bold">{logo}</span></Link>
+          <Link href="/" className="flex items-center gap-2">{logoImg ? <img src={logoImg} alt={logo} className="h-8 object-contain" /> : <Brain className="h-6 w-6 text-primary" />}<span className="text-xl font-bold">{logo}</span></Link>
           <Link href="/"><Button variant="ghost" className="gap-2"><ArrowLeft className="h-4 w-4" />Ana Sayfa</Button></Link>
         </div>
       </nav>

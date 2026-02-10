@@ -139,6 +139,9 @@ const STORAGE_KEYS = {
   USER_PASSWORD: 'userPassword',
   TWO_FACTOR_ENABLED: 'twoFactorEnabled',
   TWO_FACTOR_CODE: 'twoFactorCode',
+  LOGO_IMAGE: 'site_logo_image',
+  FAVICON: 'site_favicon',
+  SITE_TITLE: 'site_title',
 };
 
 // ============ CORE STORAGE (Supabase + fallback) ============
@@ -308,6 +311,18 @@ export async function saveContactInfo(info: ContactInfo): Promise<void> { await 
 // ============ LOGO ============
 export async function getLogo(): Promise<string> { return getStorageItem(STORAGE_KEYS.LOGO, 'PsikoPanel'); }
 export async function saveLogo(logo: string): Promise<void> { await setStorageItem(STORAGE_KEYS.LOGO, logo); }
+
+// ============ LOGO IMAGE ============
+export async function getLogoImage(): Promise<string> { return getStorageItem(STORAGE_KEYS.LOGO_IMAGE, ''); }
+export async function saveLogoImage(img: string): Promise<void> { await setStorageItem(STORAGE_KEYS.LOGO_IMAGE, img); }
+
+// ============ FAVICON ============
+export async function getFavicon(): Promise<string> { return getStorageItem(STORAGE_KEYS.FAVICON, ''); }
+export async function saveFavicon(fav: string): Promise<void> { await setStorageItem(STORAGE_KEYS.FAVICON, fav); }
+
+// ============ SITE TITLE (Browser Tab) ============
+export async function getSiteTitle(): Promise<string> { return getStorageItem(STORAGE_KEYS.SITE_TITLE, 'PsikoPanel - Profesyonel Psikolojik Danışmanlık'); }
+export async function saveSiteTitle(title: string): Promise<void> { await setStorageItem(STORAGE_KEYS.SITE_TITLE, title); }
 
 // ============ PASSWORD HASHING (SHA-256) ============
 async function hashPassword(password: string): Promise<string> {

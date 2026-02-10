@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import WhatsAppButton from "@/components/whatsapp-button";
-import { getHeroContent, getFeatures, getStats, getAboutContent, getPackagesAsServices, getContactInfo, getLogo, getSectionVisibility, getBlogPosts, type HeroContent, type Feature, type Stat, type AboutContent, type Service, type ContactInfo, type SectionVisibility, type BlogPost } from "@/lib/content-manager";
+import { getHeroContent, getFeatures, getStats, getAboutContent, getPackagesAsServices, getContactInfo, getLogo, getLogoImage, getSectionVisibility, getBlogPosts, type HeroContent, type Feature, type Stat, type AboutContent, type Service, type ContactInfo, type SectionVisibility, type BlogPost } from "@/lib/content-manager";
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = { Brain, Heart, Users, Shield, Star, CheckCircle };
 
@@ -18,6 +18,7 @@ export default function HomePage() {
   const [services, setServices] = useState<Service[]>([]);
   const [contact, setContact] = useState<ContactInfo | null>(null);
   const [logo, setLogo] = useState("PsikoPanel");
+  const [logoImage, setLogoImage] = useState("");
   const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
   const [vis, setVis] = useState<SectionVisibility>({ hero:true, stats:true, features:true, about:true, packages:true, contact:true, navbar:true, blog:true });
 
@@ -30,6 +31,7 @@ export default function HomePage() {
       setServices(await getPackagesAsServices());
       setContact(await getContactInfo());
       setLogo(await getLogo());
+      setLogoImage(await getLogoImage());
       setBlogPosts((await getBlogPosts()).filter(p => p.published));
       setVis(await getSectionVisibility());
     };
@@ -43,7 +45,7 @@ export default function HomePage() {
       {vis.navbar && <nav className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
-            <Link href="/" className="flex items-center gap-2"><Brain className="h-6 w-6 text-primary" /><span className="text-xl font-bold">{logo}</span></Link>
+            <Link href="/" className="flex items-center gap-2">{logoImage ? <img src={logoImage} alt={logo} className="h-8 object-contain" /> : <Brain className="h-6 w-6 text-primary" />}<span className="text-xl font-bold">{logo}</span></Link>
             <div className="hidden md:flex items-center gap-6">
               {vis.features && <a href="#hizmetler" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Hizmetler</a>}
               {vis.about && <a href="#hakkimda" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Hakkımda</a>}
@@ -171,7 +173,7 @@ export default function HomePage() {
       <footer className="py-8 border-t">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-2"><Brain className="h-5 w-5 text-primary" /><span className="font-semibold">{logo}</span></div>
+            <div className="flex items-center gap-2">{logoImage ? <img src={logoImage} alt={logo} className="h-6 object-contain" /> : <Brain className="h-5 w-5 text-primary" />}<span className="font-semibold">{logo}</span></div>
             <div className="flex items-center gap-4">
               <Link href="/kvkk" className="text-sm text-muted-foreground hover:text-foreground transition-colors">KVKK & Gizlilik</Link>
               <span className="text-muted-foreground">|</span>

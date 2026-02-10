@@ -3,15 +3,17 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Brain, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { getLogo, getContactInfo, type ContactInfo } from "@/lib/content-manager";
+import { getLogo, getLogoImage, getContactInfo, type ContactInfo } from "@/lib/content-manager";
 
 export default function KVKKPage() {
   const [logo, setLogo] = useState("PsikoPanel");
+  const [logoImg, setLogoImg] = useState("");
   const [contact, setContact] = useState<ContactInfo | null>(null);
 
   useEffect(() => {
     const load = async () => {
       setLogo(await getLogo());
+      setLogoImg(await getLogoImage());
       setContact(await getContactInfo());
     };
     load();
@@ -21,7 +23,7 @@ export default function KVKKPage() {
     <div className="min-h-screen bg-background">
       <nav className="border-b bg-background">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 flex h-16 items-center justify-between">
-          <Link href="/" className="flex items-center gap-2"><Brain className="h-6 w-6 text-primary" /><span className="text-xl font-bold">{logo}</span></Link>
+          <Link href="/" className="flex items-center gap-2">{logoImg ? <img src={logoImg} alt={logo} className="h-8 object-contain" /> : <Brain className="h-6 w-6 text-primary" />}<span className="text-xl font-bold">{logo}</span></Link>
           <Link href="/"><Button variant="ghost" className="gap-2"><ArrowLeft className="h-4 w-4" />Ana Sayfa</Button></Link>
         </div>
       </nav>

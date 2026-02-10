@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { Lock, Shield, Eye, EyeOff, Copy, Check, Mail, Bell, Smartphone, AlertTriangle } from "lucide-react";
+import { Lock, Shield, Eye, EyeOff, Copy, Check, Mail, Bell, Smartphone, AlertTriangle, Upload, X, Image, Globe, FileImage } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   changePassword, isTwoFactorEnabled, enableTwoFactor, confirmTwoFactor, disableTwoFactor,
   getTwoFactorSecret, verifyTwoFactor, saveLogo, getLogo,
+  getLogoImage, saveLogoImage, getFavicon, saveFavicon, getSiteTitle, saveSiteTitle,
   getEmailSettings, saveEmailSettings, type EmailNotificationSettings,
 } from "@/lib/content-manager";
 
@@ -32,6 +33,9 @@ export default function SettingsPage() {
   const [showDisableConfirm, setShowDisableConfirm] = useState(false);
   // General
   const [logo, setLogo] = useState("");
+  const [logoImage, setLogoImage] = useState("");
+  const [favicon, setFavicon] = useState("");
+  const [siteTitle, setSiteTitle] = useState("");
   // Email
   const [emailSettings, setEmailSettings] = useState<EmailNotificationSettings>({ enabled: false, notificationEmail: '', webhookUrl: '' });
 
@@ -40,6 +44,9 @@ export default function SettingsPage() {
       setTwoFAEnabled(await isTwoFactorEnabled());
       setTotpSecret(await getTwoFactorSecret());
       setLogo(await getLogo());
+      setLogoImage(await getLogoImage());
+      setFavicon(await getFavicon());
+      setSiteTitle(await getSiteTitle());
       setEmailSettings(await getEmailSettings());
       setMounted(true);
     };
@@ -126,6 +133,30 @@ export default function SettingsPage() {
   // ===== GENERAL =====
   const handleLogoSave = async () => { if (!logo.trim()) { alert("Logo boş olamaz."); return; } await saveLogo(logo); alert("Logo güncellendi!"); };
   const handleEmailSave = async () => { await saveEmailSettings(emailSettings); alert("Email bildirim ayarları kaydedildi!"); };
+
+  const uploadImage = (callback: (data: string) => void, maxW: number, maxH: number) => {
+    const input = document.createElement("input"); input.type = "file"; input.accept = "image/*";
+    input.onchange = (e: Event) => {
+      const file = (e.target as HTMLInputElement).files?.[0]; if (!file) return;
+      const img = new window.Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        let w = img.width, h = img.height;
+        if (w > maxW || h > maxH) { const ratio = Math.min(maxW / w, maxH / h); w = Math.round(w * ratio); h = Math.round(h * ratio); }
+        canvas.width = w; canvas.height = h;
+        const ctx = canvas.getContext("2d"); ctx?.drawImage(img, 0, 0, w, h);
+        callback(canvas.toDataURL("image/png", 0.9));
+      };
+      img.src = URL.createObjectURL(file);
+    };
+    input.click();
+  };
+
+  const handleLogoImageUpload = () => uploadImage(async (data) => { setLogoImage(data); await saveLogoImage(data); alert("Logo görseli kaydedildi!"); }, 200, 80);
+  const handleLogoImageRemove = async () => { setLogoImage(""); await saveLogoImage(""); alert("Logo görseli kaldırıldı."); };
+  const handleFaviconUpload = () => uploadImage(async (data) => { setFavicon(data); await saveFavicon(data); alert("Favicon kaydedildi!"); }, 64, 64);
+  const handleFaviconRemove = async () => { setFavicon(""); await saveFavicon(""); alert("Favicon kaldırıldı."); };
+  const handleSiteTitleSave = async () => { await saveSiteTitle(siteTitle); alert("Sekme başlığı kaydedildi!"); };
 
   return (
     <div className="space-y-6">
@@ -317,7 +348,97 @@ export default function SettingsPage() {
 
         {/* ===== GENEL ===== */}
         <TabsContent value="general" className="space-y-6">
-          <Card><CardHeader><CardTitle>Site Logosu / Adı</CardTitle><CardDescription>Sitede görünen logo metnini değiştirin.</CardDescription></CardHeader><CardContent className="space-y-4"><div className="space-y-2"><Label>Logo Metni</Label><Input value={logo} onChange={e => setLogo(e.target.value)} placeholder="PsikoPanel" /></div><Button onClick={handleLogoSave}>Kaydet</Button></CardContent></Card>
+          {/* Logo Görseli */}
+          <Card>
+            <CardHeader><CardTitle className="flex items-center gap-2"><Image className="h-5 w-5" />Site Logo Görseli</CardTitle><CardDescription>Navbar ve footer&apos;da görünecek logo görseli. Önerilen boyut: max 200x80 piksel. Yüklediğiniz görsel otomatik boyutlandırılır.</CardDescription></CardHeader>
+            <CardContent className="space-y-4">
+              {logoImage ? (
+                <div className="space-y-3">
+                  <div className="border rounded-lg p-4 bg-muted/30 inline-block">
+                    <img src={logoImage} alt="Logo" className="max-h-16 object-contain" />
+                  </div>
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" onClick={handleLogoImageUpload} className="gap-2"><Upload className="h-4 w-4" />Değiştir</Button>
+                    <Button variant="outline" size="sm" onClick={handleLogoImageRemove} className="gap-2 text-destructive"><X className="h-4 w-4" />Kaldır</Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <div className="border-2 border-dashed rounded-lg p-8 text-center text-muted-foreground">
+                    <Image className="h-10 w-10 mx-auto mb-2 opacity-40" />
+                    <p className="text-sm">Logo görseli yüklenmemiş</p>
+                    <p className="text-xs mt-1">Yüklenmezse logo metni kullanılır</p>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={handleLogoImageUpload} className="gap-2"><Upload className="h-4 w-4" />Görsel Yükle</Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Logo Metni */}
+          <Card>
+            <CardHeader><CardTitle>Logo Metni</CardTitle><CardDescription>Logo görseli yoksa veya görselin yanında görünecek site adı.</CardDescription></CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2"><Label>Logo Metni</Label><Input value={logo} onChange={e => setLogo(e.target.value)} placeholder="PsikoPanel" /></div>
+              <Button onClick={handleLogoSave}>Kaydet</Button>
+            </CardContent>
+          </Card>
+
+          {/* Favicon */}
+          <Card>
+            <CardHeader><CardTitle className="flex items-center gap-2"><FileImage className="h-5 w-5" />Favicon</CardTitle><CardDescription>Tarayıcı sekmesinde görünen küçük ikon. Önerilen boyut: 64x64 piksel. Kare bir görsel yükleyin.</CardDescription></CardHeader>
+            <CardContent className="space-y-4">
+              {favicon ? (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-4">
+                    <div className="border rounded-lg p-3 bg-muted/30 inline-block">
+                      <img src={favicon} alt="Favicon" className="w-8 h-8 object-contain" />
+                    </div>
+                    <div className="flex items-center gap-2 bg-muted rounded-lg px-3 py-2">
+                      <img src={favicon} alt="" className="w-4 h-4" />
+                      <span className="text-xs text-muted-foreground truncate max-w-[180px]">{siteTitle || "PsikoPanel"}</span>
+                    </div>
+                    <span className="text-xs text-muted-foreground">← Sekme önizleme</span>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" onClick={handleFaviconUpload} className="gap-2"><Upload className="h-4 w-4" />Değiştir</Button>
+                    <Button variant="outline" size="sm" onClick={handleFaviconRemove} className="gap-2 text-destructive"><X className="h-4 w-4" />Kaldır</Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <div className="border-2 border-dashed rounded-lg p-6 text-center text-muted-foreground">
+                    <FileImage className="h-8 w-8 mx-auto mb-2 opacity-40" />
+                    <p className="text-sm">Favicon yüklenmemiş</p>
+                    <p className="text-xs mt-1">Varsayılan tarayıcı ikonu kullanılır</p>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={handleFaviconUpload} className="gap-2"><Upload className="h-4 w-4" />Favicon Yükle</Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Sekme Başlığı */}
+          <Card>
+            <CardHeader><CardTitle className="flex items-center gap-2"><Globe className="h-5 w-5" />Tarayıcı Sekme Başlığı</CardTitle><CardDescription>Google sekmesinde favicon&apos;ın yanında görünen yazı. Arama motorlarında da başlık olarak gösterilir.</CardDescription></CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label>Sekme Başlığı</Label>
+                <Input value={siteTitle} onChange={e => setSiteTitle(e.target.value)} placeholder="PsikoPanel - Profesyonel Psikolojik Danışmanlık" />
+                <p className="text-xs text-muted-foreground">Örnek: &quot;Psk. Ayşe Yılmaz - Klinik Psikolog&quot; veya &quot;İstanbul Psikolojik Danışmanlık Merkezi&quot;</p>
+              </div>
+              {siteTitle && (
+                <div className="bg-muted rounded-lg p-3">
+                  <p className="text-xs text-muted-foreground mb-1">Google sekmesi önizleme:</p>
+                  <div className="flex items-center gap-2 bg-background rounded px-3 py-1.5 border max-w-sm">
+                    {favicon ? <img src={favicon} alt="" className="w-4 h-4 flex-shrink-0" /> : <Globe className="h-4 w-4 text-muted-foreground flex-shrink-0" />}
+                    <span className="text-sm truncate">{siteTitle}</span>
+                  </div>
+                </div>
+              )}
+              <Button onClick={handleSiteTitleSave}>Kaydet</Button>
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>

@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { LayoutDashboard, Bell, CalendarCheck, Calendar, Users, Package, BarChart3, Globe, Settings, ChevronDown, ChevronRight, Brain, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { getLogo } from "@/lib/content-manager";
+import { getLogo, getLogoImage } from "@/lib/content-manager";
 
 const menuItems = [
   { title: "Kontrol Paneli", icon: LayoutDashboard, href: "/admin" },
@@ -29,14 +29,15 @@ export default function Sidebar() {
   const [websiteOpen, setWebsiteOpen] = useState(pathname.startsWith("/admin/website"));
   const [mobileOpen, setMobileOpen] = useState(false);
   const [logo, setLogo] = useState("PsikoPanel");
+  const [logoImg, setLogoImg] = useState("");
   const isActive = (href: string) => href === "/admin" ? pathname === "/admin" : pathname.startsWith(href);
 
-  useEffect(() => { getLogo().then(setLogo); }, []);
+  useEffect(() => { getLogo().then(setLogo); getLogoImage().then(setLogoImg); }, []);
 
   const content = (
     <div className="flex flex-col h-full">
       <div className="flex items-center gap-2 px-6 py-5 border-b">
-        <Brain className="h-7 w-7 text-primary" />
+        {logoImg ? <img src={logoImg} alt={logo} className="h-8 object-contain" /> : <Brain className="h-7 w-7 text-primary" />}
         <span className="text-xl font-bold tracking-tight">{logo}</span>
       </div>
       <nav className="flex-1 overflow-y-auto py-4 px-3">
