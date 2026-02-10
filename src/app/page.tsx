@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { Brain, Heart, Users, Shield, ArrowRight, Phone, Mail, MapPin, Star, CheckCircle, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,57 @@ import WhatsAppButton from "@/components/whatsapp-button";
 import { getHeroContent, getFeatures, getStats, getAboutContent, getPackagesAsServices, getContactInfo, getLogo, getLogoImage, getSectionVisibility, getBlogPosts, type HeroContent, type Feature, type Stat, type AboutContent, type Service, type ContactInfo, type SectionVisibility, type BlogPost } from "@/lib/content-manager";
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = { Brain, Heart, Users, Shield, Star, CheckCircle };
+
+function AnimatedStat({ value, label }: { value: string; label: string }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [display, setDisplay] = useState("0");
+  const animated = useRef(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting && !animated.current) {
+        animated.current = true;
+        // Sayısal kısmı ayıkla
+        const match = value.match(/^([\d.]+)(.*)/);
+        if (match) {
+          const target = parseFloat(match[1]);
+          const suffix = match[2]; // +, %, vb.
+          const duration = 2000;
+          const steps = 60;
+          const increment = target / steps;
+          let current = 0;
+          let step = 0;
+          const timer = setInterval(() => {
+            step++;
+            current = Math.min(current + increment, target);
+            if (Number.isInteger(target)) {
+              setDisplay(Math.round(current).toLocaleString("tr-TR") + suffix);
+            } else {
+              setDisplay(current.toFixed(1) + suffix);
+            }
+            if (step >= steps) {
+              clearInterval(timer);
+              setDisplay(value); // Tam değeri garanti et
+            }
+          }, duration / steps);
+        } else {
+          setDisplay(value); // Sayısal değilse direkt göster
+        }
+      }
+    }, { threshold: 0.3 });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [value]);
+
+  return (
+    <div ref={ref} className="text-center">
+      <div className="text-3xl lg:text-4xl font-bold text-primary">{display}</div>
+      <div className="text-sm text-muted-foreground mt-1">{label}</div>
+    </div>
+  );
+}
 
 export default function HomePage() {
   const [hero, setHero] = useState<HeroContent | null>(null);
@@ -82,7 +133,7 @@ export default function HomePage() {
       {vis.stats && <section className="py-12 bg-muted/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {stats.map(s => <div key={s.id} className="text-center"><div className="text-3xl lg:text-4xl font-bold text-primary">{s.value}</div><div className="text-sm text-muted-foreground mt-1">{s.label}</div></div>)}
+            {stats.map(s => <AnimatedStat key={s.id} value={s.value} label={s.label} />)}
           </div>
         </div>
       </section>}
