@@ -21,11 +21,12 @@ function AnimatedStat({ value, label }: { value: string; label: string }) {
     const observer = new IntersectionObserver(([entry]) => {
       if (entry.isIntersecting && !animated.current) {
         animated.current = true;
-        // Sayısal kısmı ayıkla
-        const match = value.match(/^([\d.]+)(.*)/);
+        // Sayısal kısmı ayıkla - baştaki ve sondaki ekleri destekle (%95, 1000+, vb.)
+        const match = value.match(/^([^\d]*)([\d.]+)(.*)/);
         if (match) {
-          const target = parseFloat(match[1]);
-          const suffix = match[2]; // +, %, vb.
+          const prefix = match[1]; // %, $ vb.
+          const target = parseFloat(match[2]);
+          const suffix = match[3]; // +, vb.
           const duration = 2000;
           const steps = 60;
           const increment = target / steps;
@@ -35,9 +36,9 @@ function AnimatedStat({ value, label }: { value: string; label: string }) {
             step++;
             current = Math.min(current + increment, target);
             if (Number.isInteger(target)) {
-              setDisplay(Math.round(current).toLocaleString("tr-TR") + suffix);
+              setDisplay(prefix + Math.round(current).toLocaleString("tr-TR") + suffix);
             } else {
-              setDisplay(current.toFixed(1) + suffix);
+              setDisplay(prefix + current.toFixed(1) + suffix);
             }
             if (step >= steps) {
               clearInterval(timer);
