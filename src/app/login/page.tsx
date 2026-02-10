@@ -82,11 +82,12 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-muted/50 px-4 relative">
-      <Link href="/" className="absolute top-6 left-6 flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors">
-        <ArrowLeft className="h-4 w-4" />Ana Sayfa
-      </Link>
-      <Card className="w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center bg-muted/50 px-4">
+      <div className="w-full max-w-md">
+        <Link href="/" className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors mb-4">
+          <ArrowLeft className="h-4 w-4" />Ana Sayfa
+        </Link>
+      <Card className="w-full">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
             <Link href="/"><Brain className="h-10 w-10 text-primary" /></Link>
@@ -174,6 +175,7 @@ export default function LoginPage() {
           </form>
         </CardContent>
       </Card>
+      </div>
     </div>
   );
 }
