@@ -15,8 +15,9 @@ function BlogContent() {
   const postId = searchParams.get("id");
   const [post, setPost] = useState<BlogPost | null>(null);
   const [allPosts, setAllPosts] = useState<BlogPost[]>([]);
-  const [logo, setLogo] = useState("PsikoPanel");
+  const [logo, setLogo] = useState("");
   const [logoImg, setLogoImg] = useState("");
+  const [logoLoaded, setLogoLoaded] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -25,7 +26,7 @@ function BlogContent() {
       setAllPosts(posts);
       setLogo(await getLogo());
       setLogoImg(await getLogoImage());
-
+      setLogoLoaded(true);
       if (postId) {
         const found = posts.find(p => p.id === postId);
         setPost(found || null);
@@ -44,8 +45,8 @@ function BlogContent() {
         <nav className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur">
           <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 flex h-16 items-center justify-between">
             <Link href="/" className="flex items-center gap-2">
-              {logoImg ? <img src={logoImg} alt={logo || "Logo"} className="h-8 object-contain" /> : <Brain className="h-6 w-6 text-primary" />}
-              {logo ? <span className="text-xl font-bold">{logo}</span> : null}
+              {!logoLoaded ? <Brain className="h-6 w-6 text-primary" /> : (logoImg ? <img src={logoImg} alt={logo || "Logo"} className="h-8 object-contain" /> : <Brain className="h-6 w-6 text-primary" />)}
+              {logoLoaded && logo ? <span className="text-xl font-bold">{logo}</span> : null}
             </Link>
             <Link href="/"><Button variant="ghost" className="gap-2"><ArrowLeft className="h-4 w-4" />Ana Sayfa</Button></Link>
           </div>
@@ -88,7 +89,7 @@ function BlogContent() {
 
         <footer className="py-8 border-t">
           <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <p className="text-sm text-muted-foreground">&copy; {new Date().getFullYear()}{logo ? ` ${logo}. ` : " "}Tüm hakları saklıdır.</p>
+            <p className="text-sm text-muted-foreground">&copy; {new Date().getFullYear()}{logoLoaded && logo ? ` ${logo}. ` : " "}Tüm hakları saklıdır.</p>
           </div>
         </footer>
         <WhatsAppButton />
@@ -103,8 +104,8 @@ function BlogContent() {
         <nav className="border-b bg-background">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 flex h-16 items-center justify-between">
             <Link href="/" className="flex items-center gap-2">
-              {logoImg ? <img src={logoImg} alt={logo || "Logo"} className="h-8 object-contain" /> : <Brain className="h-6 w-6 text-primary" />}
-              {logo ? <span className="text-xl font-bold">{logo}</span> : null}
+              {!logoLoaded ? <Brain className="h-6 w-6 text-primary" /> : (logoImg ? <img src={logoImg} alt={logo || "Logo"} className="h-8 object-contain" /> : <Brain className="h-6 w-6 text-primary" />)}
+              {logoLoaded && logo ? <span className="text-xl font-bold">{logo}</span> : null}
             </Link>
             <Link href="/blog"><Button variant="ghost" className="gap-2"><ArrowLeft className="h-4 w-4" />Blog</Button></Link>
           </div>
@@ -129,8 +130,8 @@ function BlogContent() {
       <nav className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 flex h-16 items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
-            {logoImg ? <img src={logoImg} alt={logo || "Logo"} className="h-8 object-contain" /> : <Brain className="h-6 w-6 text-primary" />}
-            {logo ? <span className="text-xl font-bold">{logo}</span> : null}
+            {!logoLoaded ? <Brain className="h-6 w-6 text-primary" /> : (logoImg ? <img src={logoImg} alt={logo || "Logo"} className="h-8 object-contain" /> : <Brain className="h-6 w-6 text-primary" />)}
+            {logoLoaded && logo ? <span className="text-xl font-bold">{logo}</span> : null}
           </Link>
           <Link href="/blog"><Button variant="ghost" className="gap-2"><ArrowLeft className="h-4 w-4" />Tüm Yazılar</Button></Link>
         </div>
@@ -206,7 +207,7 @@ function BlogContent() {
 
       <footer className="py-8 border-t">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <p className="text-sm text-muted-foreground">&copy; {new Date().getFullYear()}{logo ? ` ${logo}. ` : " "}Tüm hakları saklıdır.</p>
+          <p className="text-sm text-muted-foreground">&copy; {new Date().getFullYear()}{logoLoaded && logo ? ` ${logo}. ` : " "}Tüm hakları saklıdır.</p>
         </div>
       </footer>
       <WhatsAppButton />

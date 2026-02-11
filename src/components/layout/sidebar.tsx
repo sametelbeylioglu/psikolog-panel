@@ -28,17 +28,20 @@ export default function Sidebar() {
   const pathname = usePathname();
   const [websiteOpen, setWebsiteOpen] = useState(pathname.startsWith("/admin/website"));
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [logo, setLogo] = useState("PsikoPanel");
+  const [logo, setLogo] = useState("");
   const [logoImg, setLogoImg] = useState("");
+  const [logoLoaded, setLogoLoaded] = useState(false);
   const isActive = (href: string) => href === "/admin" ? pathname === "/admin" : pathname.startsWith(href);
 
-  useEffect(() => { getLogo().then(setLogo); getLogoImage().then(setLogoImg); }, []);
+  useEffect(() => {
+    Promise.all([getLogo(), getLogoImage()]).then(([l, img]) => { setLogo(l); setLogoImg(img); setLogoLoaded(true); });
+  }, []);
 
   const content = (
     <div className="flex flex-col h-full">
       <div className="flex items-center gap-2 px-6 py-5 border-b">
-        {logoImg ? <img src={logoImg} alt={logo || "Logo"} className="h-8 object-contain" /> : <Brain className="h-7 w-7 text-primary" />}
-        {logo ? <span className="text-xl font-bold tracking-tight">{logo}</span> : null}
+        {!logoLoaded ? <Brain className="h-7 w-7 text-primary" /> : (logoImg ? <img src={logoImg} alt={logo || "Logo"} className="h-8 object-contain" /> : <Brain className="h-7 w-7 text-primary" />)}
+        {logoLoaded && logo ? <span className="text-xl font-bold tracking-tight">{logo}</span> : null}
       </div>
       <nav className="flex-1 overflow-y-auto py-4 px-3">
         <ul className="space-y-1">

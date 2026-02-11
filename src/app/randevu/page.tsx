@@ -13,15 +13,16 @@ import { getPackages, saveAppointment, addNotification, sendEmailNotification, g
 export default function RandevuPage() {
   const [step, setStep] = useState(1);
   const [packages, setPackages] = useState<TherapyPackage[]>([]);
-  const [logo, setLogo] = useState("PsikoPanel");
+  const [logo, setLogo] = useState("");
   const [logoImg, setLogoImg] = useState("");
+  const [logoLoaded, setLogoLoaded] = useState(false);
   const [selectedPackage, setSelectedPackage] = useState<TherapyPackage | null>(null);
   const [formData, setFormData] = useState({ name: "", email: "", phone: "", date: "", time: "", notes: "" });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitted, setSubmitted] = useState(false);
   const [slotStatus, setSlotStatus] = useState<{ taken: string[]; reserved: string[] }>({ taken: [], reserved: [] });
 
-  useEffect(() => { const load = async () => { setPackages(await getPackages()); setLogo(await getLogo()); setLogoImg(await getLogoImage()); }; load(); }, []);
+  useEffect(() => { const load = async () => { setPackages(await getPackages()); setLogo(await getLogo()); setLogoImg(await getLogoImage()); setLogoLoaded(true); }; load(); }, []);
 
   useEffect(() => {
     if (!formData.date) { setSlotStatus({ taken: [], reserved: [] }); return; }
@@ -84,7 +85,7 @@ export default function RandevuPage() {
     <div className="min-h-screen bg-muted/50">
       <nav className="border-b bg-background">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex h-16 items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">{logoImg ? <img src={logoImg} alt={logo || "Logo"} className="h-8 object-contain" /> : <Brain className="h-6 w-6 text-primary" />}{logo ? <span className="text-xl font-bold">{logo}</span> : null}</Link>
+          <Link href="/" className="flex items-center gap-2">{!logoLoaded ? <Brain className="h-6 w-6 text-primary" /> : (logoImg ? <img src={logoImg} alt={logo || "Logo"} className="h-8 object-contain" /> : <Brain className="h-6 w-6 text-primary" />)}{logoLoaded && logo ? <span className="text-xl font-bold">{logo}</span> : null}</Link>
           <Link href="/"><Button variant="ghost" className="gap-2"><ArrowLeft className="h-4 w-4" />Ana Sayfa</Button></Link>
         </div>
       </nav>
