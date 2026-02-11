@@ -143,6 +143,7 @@ const STORAGE_KEYS = {
   LOGO_IMAGE: 'site_logo_image',
   FAVICON: 'site_favicon',
   SITE_TITLE: 'site_title',
+  SITE_META_DESCRIPTION: 'site_meta_description',
 };
 
 // ============ CORE STORAGE (Supabase + fallback) ============
@@ -362,6 +363,11 @@ export async function saveFavicon(fav: string): Promise<void> { await setStorage
 // ============ SITE TITLE (Browser Tab) ============
 export async function getSiteTitle(): Promise<string> { return getStorageItem(STORAGE_KEYS.SITE_TITLE, 'PsikoPanel - Profesyonel Psikolojik Danışmanlık'); }
 export async function saveSiteTitle(title: string): Promise<void> { await setStorageItem(STORAGE_KEYS.SITE_TITLE, title); }
+
+// ============ SITE META DESCRIPTION (Google / SEO) ============
+const DEFAULT_META_DESCRIPTION = 'Bireysel terapi, çift terapisi, aile danışmanlığı ve travma terapisi. Uzman psikolog ile güvenli ve destekleyici ortamda profesyonel psikolojik danışmanlık.';
+export async function getMetaDescription(): Promise<string> { return getStorageItem(STORAGE_KEYS.SITE_META_DESCRIPTION, DEFAULT_META_DESCRIPTION); }
+export async function saveMetaDescription(desc: string): Promise<void> { await setStorageItem(STORAGE_KEYS.SITE_META_DESCRIPTION, desc); }
 
 // ============ PASSWORD HASHING (SHA-256) ============
 async function hashPassword(password: string): Promise<string> {

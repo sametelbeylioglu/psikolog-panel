@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Brain, ArrowLeft, Calendar, User, Clock, ArrowRight } from "lucide-react";
+import { ArrowLeft, Calendar, User, Clock, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -45,7 +45,7 @@ function BlogContent() {
         <nav className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur">
           <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 flex h-16 items-center justify-between">
             <Link href="/" className="flex items-center gap-2">
-              {!logoLoaded ? <Brain className="h-6 w-6 text-primary" /> : (logoImg ? <img src={logoImg} alt={logo || "Logo"} className="h-8 object-contain" /> : <Brain className="h-6 w-6 text-primary" />)}
+              {logoLoaded && logoImg ? <img src={logoImg} alt={logo || "Logo"} className="h-8 object-contain" /> : null}
               {logoLoaded && logo ? <span className="text-xl font-bold">{logo}</span> : null}
             </Link>
             <Link href="/"><Button variant="ghost" className="gap-2"><ArrowLeft className="h-4 w-4" />Ana Sayfa</Button></Link>
@@ -104,7 +104,7 @@ function BlogContent() {
         <nav className="border-b bg-background">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 flex h-16 items-center justify-between">
             <Link href="/" className="flex items-center gap-2">
-              {!logoLoaded ? <Brain className="h-6 w-6 text-primary" /> : (logoImg ? <img src={logoImg} alt={logo || "Logo"} className="h-8 object-contain" /> : <Brain className="h-6 w-6 text-primary" />)}
+              {logoLoaded && logoImg ? <img src={logoImg} alt={logo || "Logo"} className="h-8 object-contain" /> : null}
               {logoLoaded && logo ? <span className="text-xl font-bold">{logo}</span> : null}
             </Link>
             <Link href="/blog"><Button variant="ghost" className="gap-2"><ArrowLeft className="h-4 w-4" />Blog</Button></Link>
@@ -130,7 +130,7 @@ function BlogContent() {
       <nav className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 flex h-16 items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
-            {!logoLoaded ? <Brain className="h-6 w-6 text-primary" /> : (logoImg ? <img src={logoImg} alt={logo || "Logo"} className="h-8 object-contain" /> : <Brain className="h-6 w-6 text-primary" />)}
+            {logoLoaded && logoImg ? <img src={logoImg} alt={logo || "Logo"} className="h-8 object-contain" /> : null}
             {logoLoaded && logo ? <span className="text-xl font-bold">{logo}</span> : null}
           </Link>
           <Link href="/blog"><Button variant="ghost" className="gap-2"><ArrowLeft className="h-4 w-4" />Tüm Yazılar</Button></Link>

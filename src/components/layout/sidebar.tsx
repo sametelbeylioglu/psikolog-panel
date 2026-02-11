@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { LayoutDashboard, Bell, CalendarCheck, Calendar, Users, Package, BarChart3, Globe, Settings, ChevronDown, ChevronRight, Brain, Menu, X } from "lucide-react";
+import { LayoutDashboard, Bell, CalendarCheck, Calendar, Users, Package, BarChart3, Globe, Settings, ChevronDown, ChevronRight, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getLogo, getLogoImage } from "@/lib/content-manager";
 
@@ -40,7 +40,7 @@ export default function Sidebar() {
   const content = (
     <div className="flex flex-col h-full">
       <div className="flex items-center gap-2 px-6 py-5 border-b">
-        {!logoLoaded ? <Brain className="h-7 w-7 text-primary" /> : (logoImg ? <img src={logoImg} alt={logo || "Logo"} className="h-8 object-contain" /> : <Brain className="h-7 w-7 text-primary" />)}
+        {logoLoaded && logoImg ? <img src={logoImg} alt={logo || "Logo"} className="h-8 object-contain" /> : null}
         {logoLoaded && logo ? <span className="text-xl font-bold tracking-tight">{logo}</span> : null}
       </div>
       <nav className="flex-1 overflow-y-auto py-4 px-3">

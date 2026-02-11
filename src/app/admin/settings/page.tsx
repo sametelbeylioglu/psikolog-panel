@@ -4,6 +4,7 @@ import { Lock, Shield, Eye, EyeOff, Copy, Check, Mail, Bell, Smartphone, AlertTr
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -11,7 +12,7 @@ import {
   changePassword, isTwoFactorEnabled, enableTwoFactor, confirmTwoFactor, disableTwoFactor,
   getTwoFactorSecret, verifyTwoFactor, saveLogo, getLogo,
   getLogoImage, saveLogoImage, getFavicon, saveFavicon, getSiteTitle, saveSiteTitle,
-  getEmailSettings, saveEmailSettings, type EmailNotificationSettings,
+  getMetaDescription, saveMetaDescription, getEmailSettings, saveEmailSettings, type EmailNotificationSettings,
 } from "@/lib/content-manager";
 
 export default function SettingsPage() {
@@ -36,6 +37,7 @@ export default function SettingsPage() {
   const [logoImage, setLogoImage] = useState("");
   const [favicon, setFavicon] = useState("");
   const [siteTitle, setSiteTitle] = useState("");
+  const [metaDescription, setMetaDescription] = useState("");
   // Email
   const [emailSettings, setEmailSettings] = useState<EmailNotificationSettings>({ enabled: false, notificationEmail: '', webhookUrl: '' });
 
@@ -47,6 +49,7 @@ export default function SettingsPage() {
       setLogoImage(await getLogoImage());
       setFavicon(await getFavicon());
       setSiteTitle(await getSiteTitle());
+      setMetaDescription(await getMetaDescription());
       setEmailSettings(await getEmailSettings());
       setMounted(true);
     };
@@ -132,6 +135,7 @@ export default function SettingsPage() {
 
   // ===== GENERAL =====
   const handleLogoSave = async () => { await saveLogo(logo.trim()); alert("Logo güncellendi!"); };
+  const handleMetaDescriptionSave = async () => { await saveMetaDescription(metaDescription.trim()); alert("Google açıklaması kaydedildi!"); };
   const handleEmailSave = async () => { await saveEmailSettings(emailSettings); alert("Email bildirim ayarları kaydedildi!"); };
 
   const uploadImage = (callback: (data: string) => void, maxW: number, maxH: number) => {
@@ -437,6 +441,19 @@ export default function SettingsPage() {
                 </div>
               )}
               <Button onClick={handleSiteTitleSave}>Kaydet</Button>
+            </CardContent>
+          </Card>
+
+          {/* Google Açıklaması */}
+          <Card>
+            <CardHeader><CardTitle className="flex items-center gap-2"><Globe className="h-5 w-5" />Google / Arama Açıklaması</CardTitle><CardDescription>Google arama sonuçlarında sitenizin altında görünen kısa metin. Yanlış veya &quot;Diyetisyen&quot; gibi eski metinleri buradan düzeltin. 150–160 karakter ideal.</CardDescription></CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label>Açıklama (meta description)</Label>
+                <Textarea value={metaDescription} onChange={e => setMetaDescription(e.target.value)} placeholder="Bireysel terapi, çift terapisi, aile danışmanlığı. Uzman psikolog ile profesyonel psikolojik danışmanlık." maxLength={320} rows={3} className="resize-none" />
+                <p className="text-xs text-muted-foreground">{metaDescription.length} / 320 karakter</p>
+              </div>
+              <Button onClick={handleMetaDescriptionSave}>Kaydet</Button>
             </CardContent>
           </Card>
         </TabsContent>

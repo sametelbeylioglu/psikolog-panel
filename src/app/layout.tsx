@@ -6,25 +6,30 @@ import "./globals.css";
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://sametelbeylioglu.com";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   title: {
-    default: "PsikoPanel - Profesyonel Psikolojik Danışmanlık",
-    template: "%s | PsikoPanel",
+    default: "Uzman Psikolog - Psikolojik Danışmanlık",
+    template: "%s | Psikolojik Danışmanlık",
   },
-  description: "Bireysel terapi, çift terapisi, aile danışmanlığı ve travma terapisi hizmetleri. Uzman psikolog ile güvenli ve destekleyici bir ortamda profesyonel psikolojik danışmanlık.",
+  description: "Bireysel terapi, çift terapisi, aile danışmanlığı ve travma terapisi. Uzman psikolog ile güvenli ve destekleyici ortamda profesyonel psikolojik danışmanlık.",
   keywords: ["psikolog", "psikolojik danışmanlık", "terapi", "bireysel terapi", "çift terapisi", "aile danışmanlığı", "travma terapisi", "EMDR", "bilişsel davranışçı terapi", "online terapi", "İstanbul psikolog"],
   authors: [{ name: "PsikoPanel" }],
   creator: "PsikoPanel",
+  icons: { icon: [{ url: "/icon.svg", type: "image/svg+xml" }] },
   openGraph: {
     type: "website",
     locale: "tr_TR",
-    siteName: "PsikoPanel",
-    title: "PsikoPanel - Profesyonel Psikolojik Danışmanlık",
-    description: "Bireysel terapi, çift terapisi, aile danışmanlığı ve travma terapisi hizmetleri. Uzman psikolog ile profesyonel psikolojik danışmanlık.",
+    siteName: "Psikolojik Danışmanlık",
+    title: "Uzman Psikolog - Psikolojik Danışmanlık",
+    description: "Bireysel terapi, çift terapisi, aile danışmanlığı ve travma terapisi. Uzman psikolog ile profesyonel psikolojik danışmanlık.",
+    url: siteUrl,
   },
   twitter: {
     card: "summary_large_image",
-    title: "PsikoPanel - Profesyonel Psikolojik Danışmanlık",
+    title: "Uzman Psikolog - Psikolojik Danışmanlık",
     description: "Bireysel terapi, çift terapisi, aile danışmanlığı ve travma terapisi hizmetleri.",
   },
   robots: {
@@ -41,7 +46,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="theme-color" content="#0f172a" />
-        <link rel="canonical" href="https://www.psikopanel.com" />
+        <link rel="canonical" href={siteUrl} />
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}><DynamicHead />{children}</body>
     </html>

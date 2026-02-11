@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Brain, ArrowLeft, ArrowRight, CheckCircle, Calendar, Clock, User, Mail, Phone } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle, Calendar, Clock, User, Mail, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -85,7 +85,7 @@ export default function RandevuPage() {
     <div className="min-h-screen bg-muted/50">
       <nav className="border-b bg-background">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex h-16 items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">{!logoLoaded ? <Brain className="h-6 w-6 text-primary" /> : (logoImg ? <img src={logoImg} alt={logo || "Logo"} className="h-8 object-contain" /> : <Brain className="h-6 w-6 text-primary" />)}{logoLoaded && logo ? <span className="text-xl font-bold">{logo}</span> : null}</Link>
+          <Link href="/" className="flex items-center gap-2">{logoLoaded && logoImg ? <img src={logoImg} alt={logo || "Logo"} className="h-8 object-contain" /> : null}{logoLoaded && logo ? <span className="text-xl font-bold">{logo}</span> : null}</Link>
           <Link href="/"><Button variant="ghost" className="gap-2"><ArrowLeft className="h-4 w-4" />Ana Sayfa</Button></Link>
         </div>
       </nav>
