@@ -37,7 +37,7 @@ export const metadata: Metadata = {
     follow: true,
     googleBot: { index: true, follow: true, "max-snippet": -1, "max-image-preview": "large" },
   },
-  verification: {},
+  verification: { google: "VhL1fsrYXcTgnk4Lx0MVNWwsdcKfxAlIZI_vf13SVNk" },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
@@ -46,6 +46,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="theme-color" content="#0f172a" />
+        <meta name="google-site-verification" content="VhL1fsrYXcTgnk4Lx0MVNWwsdcKfxAlIZI_vf13SVNk" />
         <link rel="canonical" href={siteUrl} />
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}><DynamicHead />{children}</body>

@@ -265,7 +265,18 @@ const defaultContactInfo: ContactInfo = {
 };
 
 // ============ HERO ============
-export async function getHeroContent(): Promise<HeroContent> { return getStorageItem(STORAGE_KEYS.HOMEPAGE, defaultHeroContent); }
+function isDietitianText(s: string): boolean {
+  const lower = (s || '').toLowerCase();
+  return lower.includes('diyetisyen') || lower.includes('dyt.') || lower.includes('beslenme') || lower.includes('diyetetik') || lower.includes('İsminiz');
+}
+export async function getHeroContent(): Promise<HeroContent> {
+  const stored = await getStorageItem(STORAGE_KEYS.HOMEPAGE, defaultHeroContent);
+  if (stored.title === 'Diyetisyen' || isDietitianText(stored.description) || isDietitianText(stored.subtitle)) {
+    await setStorageItem(STORAGE_KEYS.HOMEPAGE, defaultHeroContent);
+    return defaultHeroContent;
+  }
+  return stored;
+}
 export async function saveHeroContent(content: HeroContent): Promise<void> { await setStorageItem(STORAGE_KEYS.HOMEPAGE, content); }
 
 // ============ FEATURES ============
@@ -277,7 +288,14 @@ export async function getStats(): Promise<Stat[]> { return getStorageItem(STORAG
 export async function saveStats(stats: Stat[]): Promise<void> { await setStorageItem(STORAGE_KEYS.STATS, stats); }
 
 // ============ ABOUT ============
-export async function getAboutContent(): Promise<AboutContent> { return getStorageItem(STORAGE_KEYS.ABOUT, defaultAboutContent); }
+export async function getAboutContent(): Promise<AboutContent> {
+  const stored = await getStorageItem(STORAGE_KEYS.ABOUT, defaultAboutContent);
+  if (isDietitianText(stored.description) || isDietitianText(stored.title)) {
+    await setStorageItem(STORAGE_KEYS.ABOUT, defaultAboutContent);
+    return defaultAboutContent;
+  }
+  return stored;
+}
 export async function saveAboutContent(content: AboutContent): Promise<void> { await setStorageItem(STORAGE_KEYS.ABOUT, content); }
 
 // ============ PACKAGES ============
@@ -361,12 +379,27 @@ export async function getFavicon(): Promise<string> { return getStorageItem(STOR
 export async function saveFavicon(fav: string): Promise<void> { await setStorageItem(STORAGE_KEYS.FAVICON, fav); }
 
 // ============ SITE TITLE (Browser Tab) ============
-export async function getSiteTitle(): Promise<string> { return getStorageItem(STORAGE_KEYS.SITE_TITLE, 'PsikoPanel - Profesyonel Psikolojik Danışmanlık'); }
+const DEFAULT_SITE_TITLE = 'PsikoPanel - Profesyonel Psikolojik Danışmanlık';
+export async function getSiteTitle(): Promise<string> {
+  const stored = await getStorageItem(STORAGE_KEYS.SITE_TITLE, DEFAULT_SITE_TITLE);
+  if (stored === 'Diyetisyen' || isDietitianText(stored)) {
+    await setStorageItem(STORAGE_KEYS.SITE_TITLE, DEFAULT_SITE_TITLE);
+    return DEFAULT_SITE_TITLE;
+  }
+  return stored;
+}
 export async function saveSiteTitle(title: string): Promise<void> { await setStorageItem(STORAGE_KEYS.SITE_TITLE, title); }
 
 // ============ SITE META DESCRIPTION (Google / SEO) ============
 const DEFAULT_META_DESCRIPTION = 'Bireysel terapi, çift terapisi, aile danışmanlığı ve travma terapisi. Uzman psikolog ile güvenli ve destekleyici ortamda profesyonel psikolojik danışmanlık.';
-export async function getMetaDescription(): Promise<string> { return getStorageItem(STORAGE_KEYS.SITE_META_DESCRIPTION, DEFAULT_META_DESCRIPTION); }
+export async function getMetaDescription(): Promise<string> {
+  const stored = await getStorageItem(STORAGE_KEYS.SITE_META_DESCRIPTION, DEFAULT_META_DESCRIPTION);
+  if (isDietitianText(stored)) {
+    await setStorageItem(STORAGE_KEYS.SITE_META_DESCRIPTION, DEFAULT_META_DESCRIPTION);
+    return DEFAULT_META_DESCRIPTION;
+  }
+  return stored;
+}
 export async function saveMetaDescription(desc: string): Promise<void> { await setStorageItem(STORAGE_KEYS.SITE_META_DESCRIPTION, desc); }
 
 // ============ PASSWORD HASHING (SHA-256) ============
