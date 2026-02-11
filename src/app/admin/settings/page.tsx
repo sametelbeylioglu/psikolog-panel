@@ -131,7 +131,7 @@ export default function SettingsPage() {
   };
 
   // ===== GENERAL =====
-  const handleLogoSave = async () => { if (!logo.trim()) { alert("Logo boş olamaz."); return; } await saveLogo(logo); alert("Logo güncellendi!"); };
+  const handleLogoSave = async () => { await saveLogo(logo.trim()); alert("Logo güncellendi!"); };
   const handleEmailSave = async () => { await saveEmailSettings(emailSettings); alert("Email bildirim ayarları kaydedildi!"); };
 
   const uploadImage = (callback: (data: string) => void, maxW: number, maxH: number) => {
@@ -377,7 +377,7 @@ export default function SettingsPage() {
 
           {/* Logo Metni */}
           <Card>
-            <CardHeader><CardTitle>Logo Metni</CardTitle><CardDescription>Logo görseli yoksa veya görselin yanında görünecek site adı.</CardDescription></CardHeader>
+            <CardHeader><CardTitle>Logo Metni</CardTitle><CardDescription>Logo görseli yoksa veya görselin yanında görünecek site adı. Boş bırakılabilir.</CardDescription></CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2"><Label>Logo Metni</Label><Input value={logo} onChange={e => setLogo(e.target.value)} placeholder="PsikoPanel" /></div>
               <Button onClick={handleLogoSave}>Kaydet</Button>

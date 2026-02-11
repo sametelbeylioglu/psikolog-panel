@@ -44,8 +44,8 @@ function BlogContent() {
         <nav className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur">
           <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 flex h-16 items-center justify-between">
             <Link href="/" className="flex items-center gap-2">
-              {logoImg ? <img src={logoImg} alt={logo} className="h-8 object-contain" /> : <Brain className="h-6 w-6 text-primary" />}
-              <span className="text-xl font-bold">{logo}</span>
+              {logoImg ? <img src={logoImg} alt={logo || "Logo"} className="h-8 object-contain" /> : <Brain className="h-6 w-6 text-primary" />}
+              {logo ? <span className="text-xl font-bold">{logo}</span> : null}
             </Link>
             <Link href="/"><Button variant="ghost" className="gap-2"><ArrowLeft className="h-4 w-4" />Ana Sayfa</Button></Link>
           </div>
@@ -88,7 +88,7 @@ function BlogContent() {
 
         <footer className="py-8 border-t">
           <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <p className="text-sm text-muted-foreground">&copy; {new Date().getFullYear()} {logo}. Tüm hakları saklıdır.</p>
+            <p className="text-sm text-muted-foreground">&copy; {new Date().getFullYear()}{logo ? ` ${logo}. ` : " "}Tüm hakları saklıdır.</p>
           </div>
         </footer>
         <WhatsAppButton />
@@ -103,8 +103,8 @@ function BlogContent() {
         <nav className="border-b bg-background">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 flex h-16 items-center justify-between">
             <Link href="/" className="flex items-center gap-2">
-              {logoImg ? <img src={logoImg} alt={logo} className="h-8 object-contain" /> : <Brain className="h-6 w-6 text-primary" />}
-              <span className="text-xl font-bold">{logo}</span>
+              {logoImg ? <img src={logoImg} alt={logo || "Logo"} className="h-8 object-contain" /> : <Brain className="h-6 w-6 text-primary" />}
+              {logo ? <span className="text-xl font-bold">{logo}</span> : null}
             </Link>
             <Link href="/blog"><Button variant="ghost" className="gap-2"><ArrowLeft className="h-4 w-4" />Blog</Button></Link>
           </div>
@@ -129,8 +129,8 @@ function BlogContent() {
       <nav className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 flex h-16 items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
-            {logoImg ? <img src={logoImg} alt={logo} className="h-8 object-contain" /> : <Brain className="h-6 w-6 text-primary" />}
-            <span className="text-xl font-bold">{logo}</span>
+            {logoImg ? <img src={logoImg} alt={logo || "Logo"} className="h-8 object-contain" /> : <Brain className="h-6 w-6 text-primary" />}
+            {logo ? <span className="text-xl font-bold">{logo}</span> : null}
           </Link>
           <Link href="/blog"><Button variant="ghost" className="gap-2"><ArrowLeft className="h-4 w-4" />Tüm Yazılar</Button></Link>
         </div>
@@ -206,7 +206,7 @@ function BlogContent() {
 
       <footer className="py-8 border-t">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <p className="text-sm text-muted-foreground">&copy; {new Date().getFullYear()} {logo}. Tüm hakları saklıdır.</p>
+          <p className="text-sm text-muted-foreground">&copy; {new Date().getFullYear()}{logo ? ` ${logo}. ` : " "}Tüm hakları saklıdır.</p>
         </div>
       </footer>
       <WhatsAppButton />

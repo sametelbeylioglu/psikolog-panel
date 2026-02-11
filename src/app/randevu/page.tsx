@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import WhatsAppButton from "@/components/whatsapp-button";
-import { getPackages, saveAppointment, addNotification, sendEmailNotification, getLogo, getLogoImage, generateId, type TherapyPackage } from "@/lib/content-manager";
+import { getPackages, saveAppointment, addNotification, sendEmailNotification, getLogo, getLogoImage, generateId, getTakenAndReservedForDate, addSlotReservation, removeSlotReservation, type TherapyPackage } from "@/lib/content-manager";
 
 export default function RandevuPage() {
   const [step, setStep] = useState(1);
@@ -19,10 +19,29 @@ export default function RandevuPage() {
   const [formData, setFormData] = useState({ name: "", email: "", phone: "", date: "", time: "", notes: "" });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitted, setSubmitted] = useState(false);
+  const [slotStatus, setSlotStatus] = useState<{ taken: string[]; reserved: string[] }>({ taken: [], reserved: [] });
 
   useEffect(() => { const load = async () => { setPackages(await getPackages()); setLogo(await getLogo()); setLogoImg(await getLogoImage()); }; load(); }, []);
 
+  useEffect(() => {
+    if (!formData.date) { setSlotStatus({ taken: [], reserved: [] }); return; }
+    getTakenAndReservedForDate(formData.date).then(setSlotStatus);
+    const interval = setInterval(() => { getTakenAndReservedForDate(formData.date).then(setSlotStatus); }, 10000);
+    return () => clearInterval(interval);
+  }, [formData.date]);
+
   const availableTimes = ["09:00", "10:00", "11:00", "13:00", "14:00", "15:00", "16:00", "17:00"];
+
+  const handleTimeSelect = async (t: string) => {
+    const { taken, reserved } = slotStatus;
+    if (taken.includes(t)) return;
+    if (reserved.includes(t) && formData.time !== t) return;
+    const prevTime = formData.time;
+    if (prevTime) await removeSlotReservation(formData.date, prevTime);
+    if (t === formData.time) { setFormData(f => ({ ...f, time: "" })); return; }
+    await addSlotReservation(formData.date, t);
+    setFormData(f => ({ ...f, time: t }));
+  };
 
   const validateStep2 = () => {
     const newErrors: Record<string, string> = {};
@@ -38,6 +57,7 @@ export default function RandevuPage() {
 
   const handleSubmit = async () => {
     if (!selectedPackage) return;
+    await removeSlotReservation(formData.date, formData.time);
     const id = generateId();
     await saveAppointment({
       id, clientName: formData.name, clientEmail: formData.email, clientPhone: formData.phone,
@@ -64,7 +84,7 @@ export default function RandevuPage() {
     <div className="min-h-screen bg-muted/50">
       <nav className="border-b bg-background">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex h-16 items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">{logoImg ? <img src={logoImg} alt={logo} className="h-8 object-contain" /> : <Brain className="h-6 w-6 text-primary" />}<span className="text-xl font-bold">{logo}</span></Link>
+          <Link href="/" className="flex items-center gap-2">{logoImg ? <img src={logoImg} alt={logo || "Logo"} className="h-8 object-contain" /> : <Brain className="h-6 w-6 text-primary" />}{logo ? <span className="text-xl font-bold">{logo}</span> : null}</Link>
           <Link href="/"><Button variant="ghost" className="gap-2"><ArrowLeft className="h-4 w-4" />Ana Sayfa</Button></Link>
         </div>
       </nav>
@@ -110,11 +130,11 @@ export default function RandevuPage() {
               <div className="space-y-2"><Label htmlFor="name"><User className="inline h-4 w-4 mr-1" />Ad Soyad</Label><Input id="name" placeholder="Adınız Soyadınız" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} />{errors.name && <p className="text-xs text-destructive">{errors.name}</p>}</div>
               <div className="space-y-2"><Label htmlFor="email"><Mail className="inline h-4 w-4 mr-1" />Email</Label><Input id="email" type="email" placeholder="email@ornek.com" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} />{errors.email && <p className="text-xs text-destructive">{errors.email}</p>}</div>
               <div className="space-y-2"><Label htmlFor="phone"><Phone className="inline h-4 w-4 mr-1" />Telefon</Label><Input id="phone" placeholder="0532 000 00 00" value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} />{errors.phone && <p className="text-xs text-destructive">{errors.phone}</p>}</div>
-              <div className="space-y-2"><Label htmlFor="date"><Calendar className="inline h-4 w-4 mr-1" />Tarih</Label><Input id="date" type="date" min={today} value={formData.date} onChange={e => setFormData({ ...formData, date: e.target.value })} />{errors.date && <p className="text-xs text-destructive">{errors.date}</p>}</div>
+              <div className="space-y-2"><Label htmlFor="date"><Calendar className="inline h-4 w-4 mr-1" />Tarih</Label><Input id="date" type="date" min={today} value={formData.date} onChange={e => { const newDate = e.target.value; if (formData.time) removeSlotReservation(formData.date, formData.time); setFormData(f => ({ ...f, date: newDate, time: "" })); }} />{errors.date && <p className="text-xs text-destructive">{errors.date}</p>}</div>
             </div>
-            <div className="space-y-2"><Label><Clock className="inline h-4 w-4 mr-1" />Saat Seçin</Label><div className="grid grid-cols-4 sm:grid-cols-8 gap-2">{availableTimes.map(t => (<Button key={t} type="button" variant={formData.time === t ? "default" : "outline"} size="sm" onClick={() => setFormData({ ...formData, time: t })}>{t}</Button>))}</div>{errors.time && <p className="text-xs text-destructive">{errors.time}</p>}</div>
+            <div className="space-y-2"><Label><Clock className="inline h-4 w-4 mr-1" />Saat Seçin</Label><div className="grid grid-cols-4 sm:grid-cols-8 gap-2">{availableTimes.map(t => { const isTaken = slotStatus.taken.includes(t); const isReserved = slotStatus.reserved.includes(t); const isMine = formData.time === t; const disabled = isTaken || (isReserved && !isMine); const label = isTaken ? "Dolu" : isMine ? "Rezerve" : isReserved ? "Rezerve" : t; return (<Button key={t} type="button" variant={isMine ? "default" : "outline"} size="sm" disabled={disabled} onClick={() => handleTimeSelect(t)} title={isTaken ? "Bu saat dolu" : isReserved && !isMine ? "Bu saat rezerve" : undefined}>{label}</Button>); })}</div><p className="text-xs text-muted-foreground">Dolu: alınmış, Rezerve: seçtiğiniz veya başkası tarafından kısa süreli tutulmuş.</p>{errors.time && <p className="text-xs text-destructive">{errors.time}</p>}</div>
             <div className="space-y-2"><Label htmlFor="notes">Notlar (Opsiyonel)</Label><Input id="notes" placeholder="Eklemek istediğiniz notlar..." value={formData.notes} onChange={e => setFormData({ ...formData, notes: e.target.value })} /></div>
-            <div className="flex justify-between pt-4"><Button variant="outline" onClick={() => setStep(1)} className="gap-2"><ArrowLeft className="h-4 w-4" />Geri</Button><Button onClick={() => { if (validateStep2()) setStep(3); }} className="gap-2">Devam Et <ArrowRight className="h-4 w-4" /></Button></div>
+            <div className="flex justify-between pt-4"><Button variant="outline" onClick={() => { if (formData.date && formData.time) removeSlotReservation(formData.date, formData.time); setStep(1); }} className="gap-2"><ArrowLeft className="h-4 w-4" />Geri</Button><Button onClick={() => { if (validateStep2()) setStep(3); }} className="gap-2">Devam Et <ArrowRight className="h-4 w-4" /></Button></div>
           </CardContent></Card>)}
           {step === 3 && (<Card><CardHeader><CardTitle>Randevu Özeti</CardTitle></CardHeader><CardContent>
             <div className="space-y-4">

@@ -37,8 +37,8 @@ export default function Sidebar() {
   const content = (
     <div className="flex flex-col h-full">
       <div className="flex items-center gap-2 px-6 py-5 border-b">
-        {logoImg ? <img src={logoImg} alt={logo} className="h-8 object-contain" /> : <Brain className="h-7 w-7 text-primary" />}
-        <span className="text-xl font-bold tracking-tight">{logo}</span>
+        {logoImg ? <img src={logoImg} alt={logo || "Logo"} className="h-8 object-contain" /> : <Brain className="h-7 w-7 text-primary" />}
+        {logo ? <span className="text-xl font-bold tracking-tight">{logo}</span> : null}
       </div>
       <nav className="flex-1 overflow-y-auto py-4 px-3">
         <ul className="space-y-1">

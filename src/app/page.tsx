@@ -153,7 +153,7 @@ export default function HomePage() {
       {vis.navbar && <nav className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 items-center justify-between">
-            <Link href="/" className="flex items-center gap-2">{logoImage ? <img src={logoImage} alt={logo} className="h-8 object-contain" /> : <Brain className="h-6 w-6 text-primary" />}<span className="text-xl font-bold">{logo}</span></Link>
+            <Link href="/" className="flex items-center gap-2">{logoImage ? <img src={logoImage} alt={logo || "Logo"} className="h-8 object-contain" /> : <Brain className="h-6 w-6 text-primary" />}{logo ? <span className="text-xl font-bold">{logo}</span> : null}</Link>
             <div className="hidden md:flex items-center gap-6">
               {vis.features && <a href="#hizmetler" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Hizmetler</a>}
               {vis.about && <a href="#hakkimda" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Hakkımda</a>}
@@ -364,7 +364,7 @@ export default function HomePage() {
       <footer className="py-8 border-t">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-2">{logoImage ? <img src={logoImage} alt={logo} className="h-6 object-contain" /> : <Brain className="h-5 w-5 text-primary" />}<span className="font-semibold">{logo}</span></div>
+            <div className="flex items-center gap-2">{logoImage ? <img src={logoImage} alt={logo || "Logo"} className="h-6 object-contain" /> : <Brain className="h-5 w-5 text-primary" />}{logo ? <span className="font-semibold">{logo}</span> : null}</div>
             <div className="flex items-center gap-4">
               {/* Sosyal Medya Footer */}
               {contact && (contact.socialMedia?.instagram || contact.socialMedia?.facebook || contact.socialMedia?.twitter || contact.socialMedia?.linkedin) && (
@@ -380,7 +380,7 @@ export default function HomePage() {
               <span className="text-muted-foreground">|</span>
               <Link href="/login" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Giriş</Link>
               <span className="text-muted-foreground">|</span>
-              <p className="text-sm text-muted-foreground">&copy; {new Date().getFullYear()} {logo}. Tüm hakları saklıdır.</p>
+              <p className="text-sm text-muted-foreground">&copy; {new Date().getFullYear()}{logo ? ` ${logo}. ` : " "}Tüm hakları saklıdır.</p>
             </div>
           </div>
         </div>

@@ -130,6 +130,7 @@ const STORAGE_KEYS = {
   LOGO: 'site_logo',
   THERAPY_PACKAGES: 'THERAPY_PACKAGES',
   APPOINTMENTS: 'appointments_data',
+  SLOT_RESERVATIONS: 'slot_reservations',
   NOTIFICATIONS: 'notifications_data',
   CLIENTS: 'clients_data',
   BLOG_POSTS: 'blog_posts',
@@ -288,6 +289,44 @@ export async function getAppointments(): Promise<Appointment[]> { return getStor
 export async function saveAppointments(appointments: Appointment[]): Promise<void> { await setStorageItem(STORAGE_KEYS.APPOINTMENTS, appointments); }
 export async function saveAppointment(apt: Appointment): Promise<void> { const all = await getAppointments(); all.push(apt); await saveAppointments(all); }
 export async function updateAppointment(id: string, updates: Partial<Appointment>): Promise<void> { const all = await getAppointments(); const i = all.findIndex(a => a.id === id); if (i !== -1) { all[i] = { ...all[i], ...updates }; await saveAppointments(all); } }
+
+// ============ SLOT RESERVATIONS (kısa süreli rezerve - çakışmayı önler) ============
+const RESERVATION_TTL_MS = 15 * 60 * 1000; // 15 dakika
+
+export interface SlotReservation { date: string; time: string; expiresAt: string; }
+
+async function getSlotReservationsRaw(): Promise<SlotReservation[]> {
+  return getStorageItem<SlotReservation[]>(STORAGE_KEYS.SLOT_RESERVATIONS, []);
+}
+
+export async function getTakenAndReservedForDate(date: string): Promise<{ taken: string[]; reserved: string[] }> {
+  const appointments = await getAppointments();
+  const taken = appointments
+    .filter(a => a.date === date && a.status !== 'cancelled')
+    .map(a => a.time);
+  const now = new Date().getTime();
+  let raw = await getSlotReservationsRaw();
+  raw = raw.filter(r => r.expiresAt && new Date(r.expiresAt).getTime() > now);
+  await setStorageItem(STORAGE_KEYS.SLOT_RESERVATIONS, raw);
+  const reserved = raw.filter(r => r.date === date).map(r => r.time);
+  return { taken: [...new Set(taken)], reserved: [...new Set(reserved)] };
+}
+
+export async function addSlotReservation(date: string, time: string): Promise<void> {
+  const raw = await getSlotReservationsRaw();
+  const now = new Date().getTime();
+  const expiresAt = new Date(now + RESERVATION_TTL_MS).toISOString();
+  const filtered = raw.filter(r => !(r.date === date && r.time === time) && new Date(r.expiresAt).getTime() > now);
+  filtered.push({ date, time, expiresAt });
+  await setStorageItem(STORAGE_KEYS.SLOT_RESERVATIONS, filtered);
+}
+
+export async function removeSlotReservation(date: string, time: string): Promise<void> {
+  const raw = await getSlotReservationsRaw();
+  const now = new Date().getTime();
+  const filtered = raw.filter(r => (r.date !== date || r.time !== time) && new Date(r.expiresAt).getTime() > now);
+  await setStorageItem(STORAGE_KEYS.SLOT_RESERVATIONS, filtered);
+}
 
 // ============ CLIENTS ============
 export async function getClients(): Promise<Client[]> { return getStorageItem(STORAGE_KEYS.CLIENTS, defaultClients); }
