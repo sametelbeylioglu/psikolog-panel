@@ -48,6 +48,18 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <meta name="theme-color" content="#0f172a" />
         <meta name="google-site-verification" content="VhL1fsrYXcTgnk4Lx0MVNWwsdcKfxAlIZI_vf13SVNk" />
         <link rel="canonical" href={siteUrl} />
+        {/* Google tag (gtag.js) */}
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-XPXDXVPJ1V" />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('js', new Date());
+              gtag('config', 'G-XPXDXVPJ1V');
+            `,
+          }}
+        />
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}><DynamicHead />{children}</body>
     </html>
